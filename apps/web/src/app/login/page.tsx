@@ -10,6 +10,7 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [username, setUsername] = useState("");
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
@@ -37,7 +38,7 @@ export default function Login() {
                     password,
                     options: {
                         data: {
-                            username: email.split('@')[0],
+                            username: username || email.split('@')[0],
                         }
                     }
                 });
@@ -105,16 +106,30 @@ export default function Login() {
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: "auto" }}
                                     exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden space-y-4"
                                 >
-                                    <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 mt-2 block">Confirm Password</label>
-                                    <input
-                                        type="password"
-                                        required={!isLogin}
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full bg-background border border-surface-border rounded-xl px-4 py-3 outline-none focus:border-primary transition-colors text-sm"
-                                        placeholder="••••••••"
-                                    />
+                                    <div>
+                                        <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 mt-2 block">Username</label>
+                                        <input
+                                            type="text"
+                                            required={!isLogin}
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            className="w-full bg-background border border-surface-border rounded-xl px-4 py-3 outline-none focus:border-primary transition-colors text-sm"
+                                            placeholder="HeroName"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 mt-2 block">Confirm Password</label>
+                                        <input
+                                            type="password"
+                                            required={!isLogin}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="w-full bg-background border border-surface-border rounded-xl px-4 py-3 outline-none focus:border-primary transition-colors text-sm"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
