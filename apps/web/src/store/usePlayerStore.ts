@@ -5,6 +5,10 @@ interface PlayerState {
     level: number;
     currentXP: number;
     xpToNextLevel: number;
+    userId: string | null;
+    username: string | null;
+    setAuth: (userId: string, username: string) => void;
+    initStats: (level: number, currentXP: number, xpToNextLevel: number) => void;
     addXP: (amount: number) => void;
     resetStats: () => void;
 }
@@ -15,6 +19,13 @@ export const usePlayerStore = create<PlayerState>()(
             level: 1,
             currentXP: 0,
             xpToNextLevel: 1000,
+            userId: null,
+            username: null,
+
+            setAuth: (userId: string, username: string) => set({ userId, username }),
+
+            initStats: (level: number, currentXP: number, xpToNextLevel: number) =>
+                set({ level, currentXP, xpToNextLevel }),
 
             addXP: (amount: number) => set((state) => {
                 let newXp = state.currentXP + amount;
@@ -25,7 +36,6 @@ export const usePlayerStore = create<PlayerState>()(
                 while (newXp >= nextLevelXp) {
                     newXp -= nextLevelXp;
                     newLevel += 1;
-                    // XP required for next level formula: 1000 * (Level ^ 1.5)
                     nextLevelXp = Math.floor(1000 * Math.pow(newLevel, 1.5));
                 }
 

@@ -5,16 +5,50 @@ import { User, Swords, BookOpen, Clock, Activity, Flame } from "lucide-react";
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, setAuth, initStats, username } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/login");
+        return;
+      }
+
+      const user = session.user;
+      const uname = user.user_metadata?.username || user.email?.split('@')[0] || "Hero";
+      setAuth(user.id, uname);
+
+      // Hydrate with Real Engine Data
+      try {
+        const res = await fetch(`http://localhost:3001/player/${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          initStats(data.level, data.xp_current, data.xp_to_next);
+        }
+      } catch (e) {
+        console.error("Engine API unreachable, falling back to local Zustand cache.", e);
+      } finally {
+        setMounted(true);
+      }
+    };
+
+    checkSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') router.push("/login");
+    });
+    return () => { authListener.subscription.unsubscribe(); };
+  }, [router, setAuth, initStats]);
 
   const progressPercent = mounted ? (currentXP / xpToNextLevel) * 100 : 0;
+  const displayUsername = username || "Hero";
 
   const dailyQuests = [
     { id: 1, title: "Deep Focus (45m)", icon: <BookOpen className="w-5 h-5" />, current: 0, target: 45, type: "int" },
@@ -41,7 +75,7 @@ export default function TavernDashboard() {
           <div className="flex-1 w-full">
             <div className="flex justify-between items-end mb-2">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Alessandro</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{displayUsername}</h1>
                 <p className="text-sm text-foreground/60 flex items-center gap-2">
                   <span className="text-accent font-medium">Class: Novice</span>
                   <span className="inline-flex items-center gap-1 bg-surface-border px-2 py-0.5 rounded text-xs">
