@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Swords, BookOpen, Clock, Activity, Flame } from "lucide-react";
+import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
@@ -47,6 +47,11 @@ export default function TavernDashboard() {
     return () => { authListener.subscription.unsubscribe(); };
   }, [router, setAuth, initStats]);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
   const progressPercent = mounted ? (currentXP / xpToNextLevel) * 100 : 0;
   const displayUsername = username || "Hero";
 
@@ -61,7 +66,16 @@ export default function TavernDashboard() {
       <div className="max-w-4xl mx-auto space-y-8">
 
         {/* Header / Player Status */}
-        <section className="bg-surface/50 border border-surface-border p-6 rounded-2xl backdrop-blur-md flex flex-col md:flex-row items-center gap-6 shadow-2xl">
+        <section className="bg-surface/50 border border-surface-border p-6 rounded-2xl backdrop-blur-md flex flex-col md:flex-row items-center gap-6 shadow-2xl relative">
+
+          <button
+            onClick={handleLogout}
+            className="absolute top-4 right-4 p-2 rounded-lg bg-surface hover:bg-surface-border text-foreground/50 hover:text-[#ef4444] transition-colors border border-surface-border/50 group"
+            title="Logout"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+
           <div className="relative group cursor-pointer">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/40 transition duration-500"></div>
             <div className="w-24 h-24 bg-surface-border rounded-full border-2 border-primary/50 flex items-center justify-center relative z-10 overflow-hidden">
@@ -72,7 +86,7 @@ export default function TavernDashboard() {
             </div>
           </div>
 
-          <div className="flex-1 w-full">
+          <div className="flex-1 w-full pr-8">
             <div className="flex justify-between items-end mb-2">
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">{displayUsername}</h1>
