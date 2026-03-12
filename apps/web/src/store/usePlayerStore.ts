@@ -1,14 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+interface PlayerStats {
+    intelligence: number;
+    strength: number;
+    endurance: number;
+    discipline: number;
+    focus: number;
+    knowledge: number;
+    health: number;
+}
+
 interface PlayerState {
     level: number;
     currentXP: number;
     xpToNextLevel: number;
+    stats: PlayerStats;
     userId: string | null;
     username: string | null;
     setAuth: (userId: string, username: string) => void;
-    initStats: (level: number, currentXP: number, xpToNextLevel: number) => void;
+    initStats: (level: number, currentXP: number, xpToNextLevel: number, stats?: PlayerStats) => void;
     addXP: (amount: number) => void;
     resetStats: () => void;
 }
@@ -19,13 +30,14 @@ export const usePlayerStore = create<PlayerState>()(
             level: 1,
             currentXP: 0,
             xpToNextLevel: 1000,
+            stats: { intelligence: 1, strength: 1, endurance: 1, discipline: 1, focus: 1, knowledge: 1, health: 1 },
             userId: null,
             username: null,
 
             setAuth: (userId: string, username: string) => set({ userId, username }),
 
-            initStats: (level: number, currentXP: number, xpToNextLevel: number) =>
-                set({ level, currentXP, xpToNextLevel }),
+            initStats: (level: number, currentXP: number, xpToNextLevel: number, stats?: PlayerStats) =>
+                set((state) => ({ level, currentXP, xpToNextLevel, stats: stats || state.stats })),
 
             addXP: (amount: number) => set((state) => {
                 let newXp = state.currentXP + amount;

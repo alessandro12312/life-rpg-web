@@ -7,9 +7,10 @@ import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level, setAuth, initStats, username } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
@@ -30,7 +31,8 @@ export default function TavernDashboard() {
         const res = await fetch(`http://localhost:3001/player/${user.id}`);
         if (res.ok) {
           const data = await res.json();
-          initStats(data.level, data.xp_current, data.xp_to_next);
+          const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
+          initStats(data.level, data.xp_current, data.xp_to_next, pStats);
         }
       } catch (e) {
         console.error("Engine API unreachable, falling back to local Zustand cache.", e);
@@ -60,6 +62,15 @@ export default function TavernDashboard() {
     { id: 2, title: "Physical Training", icon: <Swords className="w-5 h-5" />, current: 20, target: 60, type: "str" },
     { id: 3, title: "Stay Hydrated (2L)", icon: <Activity className="w-5 h-5" />, current: 1, target: 2, type: "end" },
   ];
+
+  const radarData = mounted && stats ? [
+    { subject: 'INT', A: stats.intelligence || 1, fullMark: 100 },
+    { subject: 'STR', A: stats.strength || 1, fullMark: 100 },
+    { subject: 'END', A: stats.endurance || 1, fullMark: 100 },
+    { subject: 'DIS', A: stats.discipline || 1, fullMark: 100 },
+    { subject: 'FOC', A: stats.focus || 1, fullMark: 100 },
+    { subject: 'KNO', A: stats.knowledge || 1, fullMark: 100 },
+  ] : [];
 
   return (
     <main className="min-h-screen bg-background text-foreground p-4 lg:p-8 font-sans selection:bg-primary/30">
@@ -125,8 +136,29 @@ export default function TavernDashboard() {
               <Activity className="w-5 h-5 text-accent" />
               Stat Attributes
             </h2>
-            <div className="flex items-center justify-center h-48 border border-white/5 rounded-xl bg-surface/20">
-              <p className="text-sm text-foreground/40 font-mono">[Radar Chart Visualization Here]</p>
+            <div className="flex items-center justify-center h-64 border border-white/5 rounded-xl bg-surface/20 p-2">
+              {mounted && radarData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                    <PolarGrid stroke="#ffffff20" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff80', fontSize: 11, fontWeight: 600 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar
+                      name="Attributes"
+                      dataKey="A"
+                      stroke="#f59e0b"
+                      fill="#f59e0b"
+                      fillOpacity={0.4}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#09090b', borderColor: '#ffffff20', borderRadius: '12px' }}
+                      itemStyle={{ color: '#f59e0b', fontWeight: 'bold' }}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              )}
             </div>
           </div>
 
