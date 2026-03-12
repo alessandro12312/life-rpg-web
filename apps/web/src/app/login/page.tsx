@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { Key } from "lucide-react";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
@@ -28,6 +29,9 @@ export default function Login() {
                 if (error) throw error;
                 router.push("/");
             } else {
+                if (password !== confirmPassword) {
+                    throw new Error("Le password non coincidono.");
+                }
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -38,9 +42,7 @@ export default function Login() {
                     }
                 });
                 if (error) throw error;
-                // Se non richiedi conferma mail, puoi reindirizzare.
-                // Se la richiedi, mostra un toast message:
-                alert("Account creato! Verifica l'email per confermare oppure loggati direttamente se l'email verification è disattivata.");
+                alert("Avatar creato con successo! Ora procedi con il login.");
                 setIsLogin(true);
             }
         } catch (error: any) {
@@ -56,8 +58,10 @@ export default function Login() {
             <div className="absolute inset-0 bg-gradient-radial from-primary/10 to-transparent flex items-center justify-center pointer-events-none" />
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                key={isLogin ? "login" : "register"}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
                 className="w-full max-w-sm z-10"
             >
                 <div className="bg-surface/80 backdrop-blur-xl border border-surface-border p-8 rounded-3xl shadow-2xl relative overflow-hidden">
@@ -95,6 +99,26 @@ export default function Login() {
                             />
                         </div>
 
+                        <AnimatePresence>
+                            {!isLogin && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                >
+                                    <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 mt-2 block">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        required={!isLogin}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full bg-background border border-surface-border rounded-xl px-4 py-3 outline-none focus:border-primary transition-colors text-sm"
+                                        placeholder="••••••••"
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                         {errorMsg && (
                             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-xs font-medium text-center">
                                 {errorMsg}
@@ -116,7 +140,11 @@ export default function Login() {
 
                     <div className="mt-6 text-center">
                         <button
-                            onClick={() => setIsLogin(!isLogin)}
+                            type="button"
+                            onClick={() => {
+                                setIsLogin(!isLogin);
+                                setErrorMsg("");
+                            }}
                             className="text-xs text-foreground/50 hover:text-primary transition-colors hover:underline underline-offset-4"
                         >
                             {isLogin ? "New here? Create character." : "Already an RPG hero? Login."}

@@ -117,16 +117,21 @@ export default function TavernDashboard() {
           </div>
 
           <div className="space-y-4">
-            <button className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3">
-              <div className="absolute inset-0 bg-gradient-to-tr from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
-                <Clock className="w-6 h-6" />
-              </div>
-              <span className="font-semibold tracking-wide">Enter The Sanctum</span>
-              <span className="text-xs text-foreground/50">Start Focus Session</span>
-            </button>
+            <Link href="/sanctum" className="block w-full">
+              <button className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3">
+                <div className="absolute inset-0 bg-gradient-to-tr from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <span className="font-semibold tracking-wide">Enter The Sanctum</span>
+                <span className="text-xs text-foreground/50">Start Focus Session</span>
+              </button>
+            </Link>
 
-            <button className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3">
+            <button
+              onClick={() => alert("Modulo Log Activity in arrivo! Presto potrai inserire i tuoi allenamenti manuali qui.")}
+              className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3"
+            >
               <div className="absolute inset-0 bg-gradient-to-tr from-[#ef4444]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <div className="w-12 h-12 rounded-full bg-[#ef4444]/10 text-[#ef4444] flex items-center justify-center">
                 <Swords className="w-6 h-6" />
