@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import { PlayerService } from './player.service';
 
 @Controller('player')
@@ -10,12 +10,11 @@ export class PlayerController {
         return this.playerService.getPlayerStats(userId);
     }
 
-    @Patch(':id/xp')
-    async addXP(
+    @Post(':id/activity')
+    async logActivity(
         @Param('id') userId: string,
-        @Body('amount') amount: number,
-        @Body('category') category: string
+        @Body() body: any
     ) {
-        return this.playerService.addXP(userId, amount, category);
+        return this.playerService.logActivity(userId, body);
     }
 }

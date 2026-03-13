@@ -10,8 +10,9 @@ import { supabase } from "@/lib/supabase";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats, userId } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
+  const [completingQuest, setCompletingQuest] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -54,13 +55,51 @@ export default function TavernDashboard() {
     router.push("/login");
   };
 
+  const handleQuestComplete = async (
+    questId: number,
+    questTitle: string,
+    duration: number,
+    statType: string,
+    category: 'STUDY' | 'WORKOUT' | 'MIXED' | 'CUSTOM'
+  ) => {
+    if (!mounted || !userId) return;
+    setCompletingQuest(questId);
+
+    const statMapping: Record<string, string> = {
+      int: 'intelligence', str: 'strength', end: 'endurance'
+    };
+
+    try {
+      const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category,
+          custom_name: questTitle,
+          duration_minutes: duration,
+          stat_type: statMapping[statType] || null,
+          intensity_multiplier: 1.0
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
+        initStats(data.level, data.xp_current, data.xp_to_next, pStats);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCompletingQuest(null);
+    }
+  };
+
   const progressPercent = mounted ? (currentXP / xpToNextLevel) * 100 : 0;
   const displayUsername = username || "Hero";
 
   const dailyQuests = [
-    { id: 1, title: "Deep Focus (45m)", icon: <BookOpen className="w-5 h-5" />, current: 0, target: 45, type: "int" },
-    { id: 2, title: "Physical Training", icon: <Swords className="w-5 h-5" />, current: 20, target: 60, type: "str" },
-    { id: 3, title: "Stay Hydrated (2L)", icon: <Activity className="w-5 h-5" />, current: 1, target: 2, type: "end" },
+    { id: 1, title: "Deep Focus (45m)", icon: <BookOpen className="w-5 h-5" />, duration: 45, type: "int", category: "STUDY" as const },
+    { id: 2, title: "Physical Training", icon: <Swords className="w-5 h-5" />, duration: 60, type: "str", category: "WORKOUT" as const },
+    { id: 3, title: "Stay Hydrated (2L)", icon: <Activity className="w-5 h-5" />, duration: 5, type: "end", category: "MIXED" as const },
   ];
 
   const radarData = mounted && stats ? [
@@ -212,31 +251,30 @@ export default function TavernDashboard() {
 
           <div className="space-y-3">
             {dailyQuests.map((quest) => {
-              const questProgress = (quest.current / quest.target) * 100;
               return (
-                <div key={quest.id} className="bg-surface/40 hover:bg-surface/60 transition duration-300 border border-surface-border p-4 rounded-xl flex items-center gap-4 cursor-pointer">
-                  <div className={`p-3 rounded-lg ${quest.type === 'int' ? 'bg-[#3b82f6]/10 text-[#3b82f6]' :
+                <div
+                  key={quest.id}
+                  onClick={() => handleQuestComplete(quest.id, quest.title, quest.duration, quest.type, quest.category)}
+                  className={`bg-surface/40 hover:bg-surface/60 transition duration-300 border border-surface-border p-4 rounded-xl flex items-center gap-4 cursor-pointer relative overflow-hidden group ${completingQuest === quest.id ? 'opacity-50 pointer-events-none' : ''}`}
+                >
+                  <div className={`p-3 rounded-lg flex items-center justify-center ${quest.type === 'int' ? 'bg-[#3b82f6]/10 text-[#3b82f6]' :
                     quest.type === 'str' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
                       'bg-[#10b981]/10 text-[#10b981]'
                     }`}>
-                    {quest.icon}
+                    {completingQuest === quest.id ? (
+                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      quest.icon
+                    )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-foreground">{quest.title}</h3>
-                    <div className="mt-2 h-1.5 w-full bg-background rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${questProgress}%` }}
-                        transition={{ duration: 1 }}
-                        className={`h-full ${quest.type === 'int' ? 'bg-[#3b82f6]' :
-                          quest.type === 'str' ? 'bg-[#ef4444]' :
-                            'bg-[#10b981]'
-                          }`}
-                      />
-                    </div>
+                    <h3 className="font-medium text-foreground transition-colors">{quest.title}</h3>
+                    <p className="text-xs text-foreground/50 mt-1">Reward: +{quest.duration * 10} XP &amp; +{((quest.duration / 60) * 0.1).toFixed(2)} {quest.type.toUpperCase()}</p>
                   </div>
                   <div className="text-right min-w-[60px]">
-                    <span className="text-sm font-mono text-foreground/60">{quest.current} / {quest.target}</span>
+                    <button className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-lg group-hover:bg-primary group-hover:text-[#09090b] transition-all duration-300 shadow-sm">
+                      COMPLETE
+                    </button>
                   </div>
                 </div>
               );
