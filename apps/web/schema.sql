@@ -22,6 +22,24 @@ CREATE TABLE IF NOT EXISTS public.users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 1.5 Skill Tree
+CREATE TABLE IF NOT EXISTS public.skills (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    required_level INTEGER DEFAULT 1,
+    cost_in_sp INTEGER DEFAULT 1,
+    category VARCHAR(50) -- e.g., 'FOCUS', 'LEARNING', 'ENDURANCE'
+);
+
+CREATE TABLE IF NOT EXISTS public.user_skills (
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    skill_id UUID REFERENCES public.skills(id) ON DELETE CASCADE,
+    unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (user_id, skill_id)
+);
+
+
 -- 2. Create Character Stats
 CREATE TABLE IF NOT EXISTS public.character_stats (
     user_id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
@@ -66,8 +84,28 @@ CREATE INDEX IF NOT EXISTS idx_activity_user_date ON public.activity_logs (user_
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.character_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_skills ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read/write for now to bootstrap MVP (In production, bind to auth.uid())
+DROP POLICY IF EXISTS "Enable all for public" ON public.users;
 CREATE POLICY "Enable all for public" ON public.users FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Enable all for public" ON public.character_stats;
 CREATE POLICY "Enable all for public" ON public.character_stats FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Enable all for public" ON public.activity_logs;
 CREATE POLICY "Enable all for public" ON public.activity_logs FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Enable all for public" ON public.skills;
+CREATE POLICY "Enable all for public" ON public.skills FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Enable all for public" ON public.user_skills;
+CREATE POLICY "Enable all for public" ON public.user_skills FOR ALL USING (true);
+
+-- MVP Seed Skills
+INSERT INTO public.skills (id, name, description, required_level, cost_in_sp, category) 
+VALUES 
+('d501b80d-6e41-4c6e-89da-5a02e6e2aa01', 'Focus del Monaco', '+10% bonus XP sulle attività di tipo STUDY o FOCUS.', 5, 2, 'FOCUS'),
+('2d0bd705-baaf-4aa9-94b2-cbf3906161c1', 'Recupero Muscolare', '+10% XP durante gli allenamenti.', 3, 1, 'ENDURANCE')
+ON CONFLICT DO NOTHING;

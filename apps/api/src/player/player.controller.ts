@@ -17,4 +17,11 @@ export class PlayerController {
     ) {
         return this.playerService.logActivity(userId, body);
     }
+    @Post(':id/onboard')
+    async onboardPlayer(
+        @Param('id') userId: string,
+        @Body() body: { studyHoursWeekly: number; workoutHoursWeekly: number }
+    ) {
+        return this.playerService.onboardPlayer(userId, body);
+    }
 }

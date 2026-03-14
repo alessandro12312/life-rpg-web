@@ -23,8 +23,11 @@ let PlayerController = class PlayerController {
     async getPlayerStats(userId) {
         return this.playerService.getPlayerStats(userId);
     }
-    async addXP(userId, amount, category) {
-        return this.playerService.addXP(userId, amount, category);
+    async logActivity(userId, body) {
+        return this.playerService.logActivity(userId, body);
+    }
+    async onboardPlayer(userId, body) {
+        return this.playerService.onboardPlayer(userId, body);
     }
 };
 exports.PlayerController = PlayerController;
@@ -36,14 +39,21 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "getPlayerStats", null);
 __decorate([
-    (0, common_1.Patch)(':id/xp'),
+    (0, common_1.Post)(':id/activity'),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('amount')),
-    __param(2, (0, common_1.Body)('category')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Number, String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
-], PlayerController.prototype, "addXP", null);
+], PlayerController.prototype, "logActivity", null);
+__decorate([
+    (0, common_1.Post)(':id/onboard'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PlayerController.prototype, "onboardPlayer", null);
 exports.PlayerController = PlayerController = __decorate([
     (0, common_1.Controller)('player'),
     __metadata("design:paramtypes", [player_service_1.PlayerService])

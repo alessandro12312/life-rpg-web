@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { Play, Pause, X, Music, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
+import { supabase } from "@/lib/supabase";
 
 export default function Sanctum() {
-    const { addXP } = usePlayerStore();
+    const { userId, initStats } = usePlayerStore();
     const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
     const [isActive, setIsActive] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
@@ -147,16 +148,45 @@ export default function Sanctum() {
                             </button>
                         </div>
                     ) : (
-                        <Link href="/" className="w-full" onClick={() => addXP(estimatedXP > 0 ? estimatedXP : 250)}>
-                            <button className="w-full py-4 rounded-xl font-bold bg-primary text-[#09090b] shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:scale-[1.02] transition-transform">
-                                Claim {estimatedXP > 0 ? estimatedXP : 250} XP
-                            </button>
-                        </Link>
+                        <button
+                            onClick={async () => {
+                                if (!userId) return;
+                                const minutesLog = estimatedXP > 0 ? minutesCompleted : 25; // if finished full timer, log 25
+                                try {
+                                    const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            category: 'FOCUS',
+                                            custom_name: 'Sanctum Deep Focus',
+                                            duration_minutes: minutesLog,
+                                            stat_type: 'focus',
+                                            intensity_multiplier: 1.2 // Focus sessions have x1.2 intensity bonus
+                                        })
+                                    });
+                                    if (res.ok) {
+                                        const data = await res.json();
+                                        const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
+                                        initStats(data.level, data.xp_current, data.xp_to_next, pStats);
+                                        window.location.href = '/'; // Go back to dashboard on finish
+                                    }
+                                } catch (e) {
+                                    console.error(e);
+                                    window.location.href = '/';
+                                }
+                            }}
+                            className="w-full py-4 rounded-xl font-bold bg-primary text-[#09090b] shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:scale-[1.02] transition-transform"
+                        >
+                            Claim {Math.floor((estimatedXP > 0 ? minutesCompleted : 25) * 10 * 1.2)} XP
+                        </button>
                     )}
 
                     {/* Utilities Bar */}
                     <div className="flex justify-center mt-4">
-                        <button className="flex items-center gap-2 text-foreground/40 hover:text-foreground/80 transition px-4 py-2 rounded-full bg-surface/30 border border-surface-border">
+                        <button
+                            onClick={() => alert("Lofi Music Player Integration COMING SOON")}
+                            className="flex items-center gap-2 text-foreground/40 hover:text-foreground/80 transition px-4 py-2 rounded-full bg-surface/30 border border-surface-border"
+                        >
                             <Music className="w-4 h-4" />
                             <span className="text-xs font-medium">Ambient Lo-Fi</span>
                         </button>

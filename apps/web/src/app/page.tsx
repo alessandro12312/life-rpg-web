@@ -23,6 +23,12 @@ export default function TavernDashboard() {
         return;
       }
 
+      const { isOnboarded } = usePlayerStore.getState();
+      if (!isOnboarded) {
+        router.push("/onboarding");
+        return;
+      }
+
       const user = session.user;
       const uname = user.user_metadata?.username || user.email?.split('@')[0] || "Hero";
       setAuth(user.id, uname);
@@ -213,17 +219,18 @@ export default function TavernDashboard() {
               </button>
             </Link>
 
-            <button
-              onClick={() => alert("Modulo Log Activity in arrivo! Presto potrai inserire i tuoi allenamenti manuali qui.")}
-              className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3"
-            >
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#ef4444]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="w-12 h-12 rounded-full bg-[#ef4444]/10 text-[#ef4444] flex items-center justify-center">
-                <Swords className="w-6 h-6" />
-              </div>
-              <span className="font-semibold tracking-wide">Log Activity</span>
-              <span className="text-xs text-foreground/50">Sync Workout or Manual Log</span>
-            </button>
+            <Link href="/log-activity" className="block w-full">
+              <button
+                className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3"
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#ef4444]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="w-12 h-12 rounded-full bg-[#ef4444]/10 text-[#ef4444] flex items-center justify-center">
+                  <Swords className="w-6 h-6" />
+                </div>
+                <span className="font-semibold tracking-wide">Log Activity</span>
+                <span className="text-xs text-foreground/50">Sync Workout or Manual Log</span>
+              </button>
+            </Link>
 
             <div className="grid grid-cols-2 gap-4">
               <Link href="/library" className="block w-full">
