@@ -18,8 +18,17 @@ interface PlayerState {
     stats: PlayerStats;
     userId: string | null;
     username: string | null;
+    currentStreak: number;
+    highestStreak: number;
     setAuth: (userId: string, username: string) => void;
-    initStats: (level: number, currentXP: number, xpToNextLevel: number, stats?: PlayerStats) => void;
+    initStats: (
+        level: number,
+        currentXP: number,
+        xpToNextLevel: number,
+        stats?: PlayerStats,
+        currentStreak?: number,
+        highestStreak?: number
+    ) => void;
     addXP: (amount: number) => void;
     resetStats: () => void;
     isOnboarded: boolean;
@@ -36,18 +45,33 @@ export const usePlayerStore = create<PlayerState>()(
             userId: null,
             username: null,
             isOnboarded: false,
+            currentStreak: 0,
+            highestStreak: 0,
 
             setAuth: (userId: string, username: string) => set({ userId, username }),
 
-            initStats: (level: number, currentXP: number, xpToNextLevel: number, stats?: PlayerStats) =>
-                set((state) => ({ level, currentXP, xpToNextLevel, stats: stats || state.stats })),
+            initStats: (
+                level: number,
+                currentXP: number,
+                xpToNextLevel: number,
+                stats?: PlayerStats,
+                currentStreak?: number,
+                highestStreak?: number
+            ) =>
+                set((state) => ({
+                    level,
+                    currentXP,
+                    xpToNextLevel,
+                    stats: stats || state.stats,
+                    currentStreak: currentStreak ?? state.currentStreak,
+                    highestStreak: highestStreak ?? state.highestStreak,
+                })),
 
             addXP: (amount: number) => set((state) => {
                 let newXp = state.currentXP + amount;
                 let newLevel = state.level;
                 let nextLevelXp = state.xpToNextLevel;
 
-                // Level Up Logic: Recursively check if we have enough XP to level up
                 while (newXp >= nextLevelXp) {
                     newXp -= nextLevelXp;
                     newLevel += 1;
@@ -62,7 +86,7 @@ export const usePlayerStore = create<PlayerState>()(
             completeOnboarding: () => set({ isOnboarded: true })
         }),
         {
-            name: 'life-rpg-player-storage', // saves to local storage
+            name: 'life-rpg-player-storage',
         }
     )
 );

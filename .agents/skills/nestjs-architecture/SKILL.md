@@ -8,10 +8,10 @@ description: Best practices e linee guida metodologiche per scrivere API in apps
 L'API del progetto `apps/api` (su porta 3001) è il motore di verità del gamification system e non confida nel client.
 
 ## 1. Struttura dei Moduli NestJS
-Ogni domain "Game"/"SaaS" (es. Profilo Personaggio giocatore = `player`, Sistema Abilità = `skills`, Motore Diario Appunti = `grimoire`) deve possedere un modulo Nest separato, generato formalmente.
-- `src/domain_name/domain_name.module.ts`: Espone i service e importa dipendenze (es. SupabaseModule).
-- `src/domain_name/domain_name.controller.ts`: Interfacciamento HTTP puro (Rotote, Metodi POST/GET, Parsing Parametri, Restituzione JSON code). Nessuna logica RPG matematica vive in questo strato.
-- `src/domain_name/domain_name.service.ts`: La Business Logic "Core". I calcoli matematici XP, formule di level-up stat, e call DTO dirette via `@supabase/supabase-js`.
+Ogni domain deve possedere un modulo Nest separato. Attualmente il progetto ha un unico modulo `player` che gestisce: progressione (XP, livelli), streak, log attività, onboarding, e **skill tree** (catalogo nodi in `SKILL_CATALOG`, tabella `player_skills`).
+- `src/player/player.module.ts`: Espone service e importa SupabaseModule.
+- `src/player/player.controller.ts`: Routing HTTP puro. Nessuna logica RPG.
+- `src/player/player.service.ts`: Business Logic core — calcoli XP, formule level-up, applicazione bonus skill tree in stack nel `logActivity`.
 
 ## 2. Iniezione di Supabase
 Data la nostra architettura RLS, il backend accede al Client Supabase globalmente fornito per manipolare dati. Nel provider Supabase (es. modulo `SupabaseModule` condiviso) il client si ottiene da `createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)` iniettando la Service Role per oltrepassare le policy utente *se si fanno calcoli API backend sicuri* oppure con il solo anon-key e autorizzazione header per mantenere le RLS dell'utente. *Attualmente, le politiche sono libere (MVP), ma tienilo presente.*

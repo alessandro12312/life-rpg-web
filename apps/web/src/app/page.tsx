@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats, userId } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats, userId, currentStreak } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
   const [completingQuest, setCompletingQuest] = useState<number | null>(null);
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function TavernDashboard() {
         if (res.ok) {
           const data = await res.json();
           const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-          initStats(data.level, data.xp_current, data.xp_to_next, pStats);
+          initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
         }
       } catch (e) {
         console.error("Engine API unreachable, falling back to local Zustand cache.", e);
@@ -90,7 +90,7 @@ export default function TavernDashboard() {
       if (res.ok) {
         const data = await res.json();
         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-        initStats(data.level, data.xp_current, data.xp_to_next, pStats);
+        initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
       }
     } catch (e) {
       console.error(e);
@@ -150,7 +150,7 @@ export default function TavernDashboard() {
                   <span className="text-accent font-medium">Class: Novice</span>
                   <span className="inline-flex items-center gap-1 bg-surface-border px-2 py-0.5 rounded text-xs">
                     <Flame className="w-3 h-3 text-orange-500" />
-                    Day 1 Streak
+                    {mounted ? `Day ${currentStreak} Streak` : 'Day - Streak'}
                   </span>
                 </p>
               </div>

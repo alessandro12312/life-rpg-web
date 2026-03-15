@@ -11,17 +11,28 @@ export class PlayerController {
     }
 
     @Post(':id/activity')
-    async logActivity(
-        @Param('id') userId: string,
-        @Body() body: any
-    ) {
+    async logActivity(@Param('id') userId: string, @Body() body: any) {
         return this.playerService.logActivity(userId, body);
     }
+
     @Post(':id/onboard')
     async onboardPlayer(
         @Param('id') userId: string,
         @Body() body: { studyHoursWeekly: number; workoutHoursWeekly: number }
     ) {
         return this.playerService.onboardPlayer(userId, body);
+    }
+
+    @Get(':id/skills')
+    async getPlayerSkills(@Param('id') userId: string) {
+        return this.playerService.getPlayerSkills(userId);
+    }
+
+    @Post(':id/skills/unlock')
+    async unlockSkill(
+        @Param('id') userId: string,
+        @Body() body: { skillId: string }
+    ) {
+        return this.playerService.unlockSkill(userId, body.skillId);
     }
 }

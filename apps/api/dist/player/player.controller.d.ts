@@ -8,4 +8,12 @@ export declare class PlayerController {
         studyHoursWeekly: number;
         workoutHoursWeekly: number;
     }): Promise<any>;
+    getPlayerSkills(userId: string): Promise<{
+        unlockedIds: string[];
+    }>;
+    unlockSkill(userId: string, body: {
+        skillId: string;
+    }): Promise<{
+        unlockedIds: string[];
+    }>;
 }
