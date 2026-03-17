@@ -16,4 +16,20 @@ export declare class PlayerController {
     }): Promise<{
         unlockedIds: string[];
     }>;
+    getAchievements(userId: string): Promise<{
+        catalog: import("./player.service").AchievementDef[];
+        unlocked: {
+            achievement_id: any;
+            unlocked_at: any;
+        }[];
+        unlockedIds: any[];
+    }>;
+    getGoals(userId: string): Promise<any[]>;
+    createGoal(userId: string, body: {
+        title: string;
+        category: string;
+        target_minutes: number;
+        deadline?: string;
+        xp_reward?: number;
+    }): Promise<any>;
 }

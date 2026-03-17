@@ -35,4 +35,22 @@ export class PlayerController {
     ) {
         return this.playerService.unlockSkill(userId, body.skillId);
     }
+
+    @Get(':id/achievements')
+    async getAchievements(@Param('id') userId: string) {
+        return this.playerService.getAchievements(userId);
+    }
+
+    @Get(':id/goals')
+    async getGoals(@Param('id') userId: string) {
+        return this.playerService.getGoals(userId);
+    }
+
+    @Post(':id/goals')
+    async createGoal(
+        @Param('id') userId: string,
+        @Body() body: { title: string; category: string; target_minutes: number; deadline?: string; xp_reward?: number }
+    ) {
+        return this.playerService.createGoal(userId, body);
+    }
 }

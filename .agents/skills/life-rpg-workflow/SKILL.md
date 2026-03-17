@@ -16,17 +16,17 @@ Questo workflow definisce come tu (Agent) devi progettare e implementare una nuo
 Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo ogni commit.
 
 ### ✅ Implementato
-1. **Auth & Onboarding** — Login Supabase, questionario iniziale, bonus stat + 500 XP
-2. **Dashboard Taverna** (`/`) — Avatar, livello, XP bar animata, radar chart stat con **scala dinamica** (`fullMark = max(maxStat * 1.5, 5)` — il poligono riempie sempre ~60-70% del chart), quest board giornaliere (completabili **una sola volta per sessione**), streak badge dinamico
-3. **Log Activity** (`/log-activity`) — Registrazione manuale studio/allenamento → calcolo XP/stat server-side. Tutte le chiamate `initStats` includono `currentStreak` e `highestStreak`
-4. **Streak System** — Calcolo automatico in `logActivity`, streak multiplier (+5% a 3gg, +10% a 7gg), `currentStreak` e `highestStreak` in Zustand e mostrati nella Dashboard
-5. **Sanctum Focus Timer** (`/sanctum`) — Timer Pomodoro 25 min per deep work. Invia `category: 'STUDY'`, `stat_type: 'focus'`, `intensity: 1.2x`. Pulsante **"Concludi"** per terminare anticipatamente (richiede minimo 1 min). XP calcolati su minuti reali trascorsi (`Math.floor(elapsed/60)`). UI in italiano ("Abbandona")
-6. **Grimoire Skill Tree** (`/grimoire`) — Skill tree drag-and-pan interattivo con 7 nodi. SP = `max(0, livello - 5) - spesi`. Bonus passivi reali applicati nel `logActivity` server-side. Tabella DB: `player_skills`
+1. **Auth & Onboarding** — Login Supabase, questionario iniziale, bonus stat + 500 XP. Crea **goal iniziali** basati su ore studio/allenamento dichiarate
+2. **Dashboard Taverna** (`/`) — Avatar, livello, XP bar animata, radar chart stat con **scala dinamica** (`fullMark = max(maxStat * 1.5, 5)`), quest board giornaliere (completabili una sola volta per sessione), streak badge dinamico, link a Trofei
+3. **Log Activity** (`/log-activity`) — Registrazione manuale studio/allenamento → calcolo XP/stat server-side. `initStats` con streak
+4. **Streak System** — Calcolo automatico in `logActivity`, streak multiplier (+5% a 3gg, +10% a 7gg), `currentStreak` e `highestStreak` in Zustand
+5. **Sanctum Focus Timer** (`/sanctum`) — Timer Pomodoro 25 min. `category: 'STUDY'`, `stat_type: 'focus'`, `intensity: 1.2x`. Pulsante "Concludi" (≥1 min). XP bonus % da skill/streak mostrati in HUD. UI italiana
+6. **Grimoire Skill Tree** (`/grimoire`) — Drag-and-pan interattivo con 7 nodi. SP = `max(0, livello - 5) - spesi`. Bonus passivi in `logActivity`. Tabella: `player_skills`
+7. **Achievement System** (`/achievements` tab Trofei) — 10 badge automatici (`ACHIEVEMENT_CATALOG`): first_blood, level_5, level_10, streak_3/7/30, study_10, workout_10, sanctum_5, skill_1. `checkAchievements()` chiamato in `logActivity`. Tabella: `achievements`
+8. **Goal Tracking** (`/achievements` tab Obiettivi) — Obiettivi personalizzati con target in ore, progress bar, XP bonus al completamento (200 XP default). `updateGoalProgress()` chiamato in `logActivity`. Form creazione nuovi goal. Tabella: `goals`
 
 ### 🔲 Da Implementare
-7. **Library** (`/library`) — Upload appunti, AI genera quiz/flashcard, rispondere = XP
-8. **Achievement System** — Badge per traguardi
-9. **Sistema Obiettivi personalizzati** — Goal tracking
+9. **Library** (`/library`) — Upload appunti, AI genera quiz/flashcard, rispondere = XP
 10. **AI Coaching** — Integrazione LLM per suggerimenti
 11. **Musica ambientale** nel Sanctum — Lofi per studio, energica per allenamento
 12. **Auth Guard API** — Middleware NestJS che verifica JWT Supabase (attualmente l'API è aperta)

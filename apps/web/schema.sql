@@ -80,12 +80,37 @@ CREATE TABLE IF NOT EXISTS public.activity_logs (
 
 CREATE INDEX IF NOT EXISTS idx_activity_user_date ON public.activity_logs (user_id, created_at);
 
+-- 5. Achievement System
+CREATE TABLE IF NOT EXISTS public.achievements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    achievement_id TEXT NOT NULL,
+    unlocked_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, achievement_id)
+);
+
+-- 6. Goal Tracking
+CREATE TABLE IF NOT EXISTS public.goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    target_minutes INTEGER NOT NULL,
+    current_minutes INTEGER DEFAULT 0,
+    deadline DATE,
+    completed BOOLEAN DEFAULT FALSE,
+    xp_reward INTEGER DEFAULT 200,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Set up Row Level Security (RLS) policies 
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.character_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_skills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read/write for now to bootstrap MVP (In production, bind to auth.uid())
 DROP POLICY IF EXISTS "Enable all for public" ON public.users;
@@ -102,6 +127,12 @@ CREATE POLICY "Enable all for public" ON public.skills FOR ALL USING (true);
 
 DROP POLICY IF EXISTS "Enable all for public" ON public.user_skills;
 CREATE POLICY "Enable all for public" ON public.user_skills FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Enable all for public" ON public.achievements;
+CREATE POLICY "Enable all for public" ON public.achievements FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Enable all for public" ON public.goals;
+CREATE POLICY "Enable all for public" ON public.goals FOR ALL USING (true);
 
 -- MVP Seed Skills
 INSERT INTO public.skills (id, name, description, required_level, cost_in_sp, category) 

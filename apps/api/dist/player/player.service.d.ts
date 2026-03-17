@@ -9,6 +9,13 @@ export interface SkillDef {
     };
 }
 export declare const SKILL_CATALOG: SkillDef[];
+export interface AchievementDef {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+}
+export declare const ACHIEVEMENT_CATALOG: AchievementDef[];
 export declare class PlayerService {
     private readonly supabase;
     constructor(supabase: SupabaseService);
@@ -19,6 +26,29 @@ export declare class PlayerService {
     unlockSkill(userId: string, skillId: string): Promise<{
         unlockedIds: string[];
     }>;
+    getAchievements(userId: string): Promise<{
+        catalog: AchievementDef[];
+        unlocked: {
+            achievement_id: any;
+            unlocked_at: any;
+        }[];
+        unlockedIds: any[];
+    }>;
+    checkAchievements(userId: string, ctx: {
+        level: number;
+        current_streak: number;
+        category?: string;
+        custom_name?: string;
+    }): Promise<string[]>;
+    getGoals(userId: string): Promise<any[]>;
+    createGoal(userId: string, payload: {
+        title: string;
+        category: string;
+        target_minutes: number;
+        deadline?: string;
+        xp_reward?: number;
+    }): Promise<any>;
+    updateGoalProgress(userId: string, category: string, minutes: number, currentLevel: number, currentXP: number, xpToNext: number): Promise<void>;
     logActivity(userId: string, payload: {
         category: 'STUDY' | 'WORKOUT' | 'MIXED' | 'CUSTOM';
         custom_name?: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut } from "lucide-react";
+import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
@@ -244,22 +244,29 @@ export default function TavernDashboard() {
                 <span className="text-xs text-foreground/50">Sync Workout or Manual Log</span>
               </button>
             </Link>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Link href="/library" className="block w-full">
-                <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-[#3b82f6]" />
-                  <span className="text-sm font-medium">The Library</span>
-                </button>
-              </Link>
-              <Link href="/grimoire" className="block w-full">
-                <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-                  <User className="w-5 h-5 text-purple-400" />
-                  <span className="text-sm font-medium">Grimoire</span>
-                </button>
-              </Link>
-            </div>
           </div>
+        </section>
+
+        {/* Navigation Links */}
+        <section className="grid grid-cols-3 gap-4">
+            <Link href="/library" className="block w-full">
+              <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#3b82f6]" />
+                <span className="text-sm font-medium">The Library</span>
+              </button>
+            </Link>
+            <Link href="/grimoire" className="block w-full">
+              <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+                <User className="w-5 h-5 text-purple-400" />
+                <span className="text-sm font-medium">Grimoire</span>
+              </button>
+            </Link>
+            <Link href="/achievements" className="block w-full">
+              <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+                <Trophy className="w-5 h-5 text-primary" />
+                <span className="text-sm font-medium">Trofei</span>
+              </button>
+            </Link>
         </section>
 
         {/* Quest Board */}

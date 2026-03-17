@@ -34,6 +34,27 @@ function getSkillById(id: string): SkillDef | undefined {
     return SKILL_CATALOG.find(s => s.id === id);
 }
 
+// ─── Achievement Catalog ────────────────────────────────────────────────────────
+export interface AchievementDef {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+}
+
+export const ACHIEVEMENT_CATALOG: AchievementDef[] = [
+    { id: 'first_blood', name: 'First Blood', description: 'Completa la tua prima attività', icon: '⚔️' },
+    { id: 'level_5', name: 'Rising Star', description: 'Raggiungi il livello 5', icon: '⭐' },
+    { id: 'level_10', name: 'Veteran', description: 'Raggiungi il livello 10', icon: '🏅' },
+    { id: 'streak_3', name: 'Consistent', description: 'Mantieni una streak di 3 giorni', icon: '🔥' },
+    { id: 'streak_7', name: 'On Fire', description: 'Mantieni una streak di 7 giorni', icon: '💥' },
+    { id: 'streak_30', name: 'Unbreakable', description: 'Mantieni una streak di 30 giorni', icon: '🛡️' },
+    { id: 'study_10', name: 'Scholar', description: 'Completa 10 sessioni di studio', icon: '📚' },
+    { id: 'workout_10', name: 'Warrior', description: 'Completa 10 sessioni di allenamento', icon: '💪' },
+    { id: 'sanctum_5', name: 'Monk', description: 'Completa 5 sessioni nel Sanctum', icon: '🧘' },
+    { id: 'skill_1', name: 'Awakened', description: 'Sblocca la tua prima skill nel Grimoire', icon: '✨' },
+];
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 @Injectable()
 export class PlayerService {
@@ -99,6 +120,137 @@ export class PlayerService {
         if (insertError) throw new Error(insertError.message);
 
         return this.getPlayerSkills(userId);
+    }
+
+    // ── Achievements ──────────────────────────────────────────────────────────
+    async getAchievements(userId: string) {
+        const { data, error } = await this.supabase.getClient()
+            .from('achievements').select('achievement_id, unlocked_at').eq('user_id', userId);
+        if (error) throw new Error(error.message);
+        const unlockedIds = (data ?? []).map((r: any) => r.achievement_id);
+        return {
+            catalog: ACHIEVEMENT_CATALOG,
+            unlocked: data ?? [],
+            unlockedIds,
+        };
+    }
+
+    async checkAchievements(userId: string, ctx: {
+        level: number; current_streak: number;
+        category?: string; custom_name?: string;
+    }) {
+        const { data: existing } = await this.supabase.getClient()
+            .from('achievements').select('achievement_id').eq('user_id', userId);
+        const has = new Set((existing ?? []).map((r: any) => r.achievement_id));
+        const newAchievements: string[] = [];
+
+        const tryUnlock = (id: string) => {
+            if (!has.has(id)) { newAchievements.push(id); has.add(id); }
+        };
+
+        // Activity count checks
+        const { count: totalActivities } = await this.supabase.getClient()
+            .from('activity_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+        if ((totalActivities ?? 0) >= 1) tryUnlock('first_blood');
+
+        // Category counts
+        const { count: studyCount } = await this.supabase.getClient()
+            .from('activity_logs').select('id', { count: 'exact', head: true })
+            .eq('user_id', userId).eq('category', 'STUDY');
+        if ((studyCount ?? 0) >= 10) tryUnlock('study_10');
+
+        const { count: workoutCount } = await this.supabase.getClient()
+            .from('activity_logs').select('id', { count: 'exact', head: true })
+            .eq('user_id', userId).eq('category', 'WORKOUT');
+        if ((workoutCount ?? 0) >= 10) tryUnlock('workout_10');
+
+        // Sanctum count (custom_name = 'Sanctum Deep Focus')
+        const { count: sanctumCount } = await this.supabase.getClient()
+            .from('activity_logs').select('id', { count: 'exact', head: true })
+            .eq('user_id', userId).eq('custom_name', 'Sanctum Deep Focus');
+        if ((sanctumCount ?? 0) >= 5) tryUnlock('sanctum_5');
+
+        // Level checks
+        if (ctx.level >= 5) tryUnlock('level_5');
+        if (ctx.level >= 10) tryUnlock('level_10');
+
+        // Streak checks
+        if (ctx.current_streak >= 3) tryUnlock('streak_3');
+        if (ctx.current_streak >= 7) tryUnlock('streak_7');
+        if (ctx.current_streak >= 30) tryUnlock('streak_30');
+
+        // Skill check
+        const { data: skills } = await this.supabase.getClient()
+            .from('player_skills').select('skill_id').eq('user_id', userId);
+        if ((skills ?? []).length >= 1) tryUnlock('skill_1');
+
+        // Batch insert new achievements
+        if (newAchievements.length > 0) {
+            await this.supabase.getClient().from('achievements').insert(
+                newAchievements.map(aid => ({ user_id: userId, achievement_id: aid }))
+            );
+        }
+
+        return newAchievements;
+    }
+
+    // ── Goals ──────────────────────────────────────────────────────────────────
+    async getGoals(userId: string) {
+        const { data, error } = await this.supabase.getClient()
+            .from('goals').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+        if (error) throw new Error(error.message);
+        return data ?? [];
+    }
+
+    async createGoal(userId: string, payload: {
+        title: string; category: string; target_minutes: number;
+        deadline?: string; xp_reward?: number;
+    }) {
+        const { data, error } = await this.supabase.getClient()
+            .from('goals').insert({
+                user_id: userId,
+                title: payload.title,
+                category: payload.category,
+                target_minutes: payload.target_minutes,
+                deadline: payload.deadline || null,
+                xp_reward: payload.xp_reward || 200,
+            }).select().single();
+        if (error) throw new Error(error.message);
+        return data;
+    }
+
+    async updateGoalProgress(userId: string, category: string, minutes: number, currentLevel: number, currentXP: number, xpToNext: number) {
+        // Fetch active goals matching category
+        const { data: goals } = await this.supabase.getClient()
+            .from('goals').select('*')
+            .eq('user_id', userId).eq('completed', false)
+            .in('category', [category, 'MIXED']);
+
+        if (!goals || goals.length === 0) return;
+
+        let bonusXP = 0;
+        for (const goal of goals) {
+            const newMinutes = Math.min(goal.current_minutes + minutes, goal.target_minutes);
+            const completed = newMinutes >= goal.target_minutes;
+            await this.supabase.getClient()
+                .from('goals').update({ current_minutes: newMinutes, completed })
+                .eq('id', goal.id);
+            if (completed) bonusXP += (goal.xp_reward || 200);
+        }
+
+        // Award bonus XP from completed goals
+        if (bonusXP > 0) {
+            let xp = currentXP + bonusXP;
+            let lvl = currentLevel;
+            let xpNext = xpToNext;
+            while (xp >= xpNext) {
+                lvl += 1; xp -= xpNext;
+                xpNext = Math.floor(1000 * Math.pow(lvl, 1.5));
+            }
+            await this.supabase.getClient().from('users')
+                .update({ xp_current: xp, xp_to_next: xpNext, level: lvl })
+                .eq('id', userId);
+        }
     }
 
     // ── Log Activity ──────────────────────────────────────────────────────────
@@ -202,6 +354,15 @@ export class PlayerService {
             stats_yield,
         });
 
+        // Update goal progress
+        await this.updateGoalProgress(userId, payload.category, payload.duration_minutes, level, xp_current, xp_to_next);
+
+        // Check achievements
+        await this.checkAchievements(userId, {
+            level, current_streak, category: payload.category,
+            custom_name: payload.custom_name,
+        });
+
         return this.getPlayerStats(userId);
     }
 
@@ -229,6 +390,28 @@ export class PlayerService {
         if (userRow) {
             await this.supabase.getClient().from('users')
                 .update({ xp_current: userRow.xp_current + 500 }).eq('id', userId);
+        }
+
+        // Create initial goals based on onboarding answers
+        const initialGoals: { title: string; category: string; target_minutes: number; xp_reward: number }[] = [];
+        if (payload.studyHoursWeekly > 0) {
+            initialGoals.push({
+                title: `Studia ${payload.studyHoursWeekly}h questa settimana`,
+                category: 'STUDY',
+                target_minutes: payload.studyHoursWeekly * 60,
+                xp_reward: 300,
+            });
+        }
+        if (payload.workoutHoursWeekly > 0) {
+            initialGoals.push({
+                title: `Allenati ${payload.workoutHoursWeekly}h questa settimana`,
+                category: 'WORKOUT',
+                target_minutes: payload.workoutHoursWeekly * 60,
+                xp_reward: 300,
+            });
+        }
+        for (const g of initialGoals) {
+            await this.createGoal(userId, g);
         }
 
         return this.getPlayerStats(userId);

@@ -35,6 +35,15 @@ let PlayerController = class PlayerController {
     async unlockSkill(userId, body) {
         return this.playerService.unlockSkill(userId, body.skillId);
     }
+    async getAchievements(userId) {
+        return this.playerService.getAchievements(userId);
+    }
+    async getGoals(userId) {
+        return this.playerService.getGoals(userId);
+    }
+    async createGoal(userId, body) {
+        return this.playerService.createGoal(userId, body);
+    }
 };
 exports.PlayerController = PlayerController;
 __decorate([
@@ -75,6 +84,28 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "unlockSkill", null);
+__decorate([
+    (0, common_1.Get)(':id/achievements'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PlayerController.prototype, "getAchievements", null);
+__decorate([
+    (0, common_1.Get)(':id/goals'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PlayerController.prototype, "getGoals", null);
+__decorate([
+    (0, common_1.Post)(':id/goals'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PlayerController.prototype, "createGoal", null);
 exports.PlayerController = PlayerController = __decorate([
     (0, common_1.Controller)('player'),
     __metadata("design:paramtypes", [player_service_1.PlayerService])
