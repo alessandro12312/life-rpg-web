@@ -18,9 +18,10 @@ export default function Sanctum() {
     const seconds = timeLeft % 60;
     const progressPercent = ((25 * 60 - timeLeft) / (25 * 60)) * 100;
 
-    // Calculate estimated XP: 10 XP per minute completed
-    const minutesCompleted = 25 - minutes - (seconds > 0 ? 1 : 0);
-    const estimatedXP = Math.max(0, minutesCompleted * 10);
+    // Calculate estimated XP based on actual elapsed seconds
+    const elapsedSeconds = 25 * 60 - timeLeft;
+    const minutesCompleted = Math.floor(elapsedSeconds / 60);
+    const estimatedXP = minutesCompleted * 10;
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -69,7 +70,7 @@ export default function Sanctum() {
                     <Link href="/">
                         <button className="text-foreground/50 hover:text-foreground transition flex items-center gap-2 group">
                             <X className="w-5 h-5 group-hover:bg-red-500/20 group-hover:text-red-500 rounded-full transition-all" />
-                            <span className="text-sm font-medium">Abandon</span>
+                            <span className="text-sm font-medium">Abbandona</span>
                         </button>
                     </Link>
                     <div className="text-right">
@@ -136,39 +137,51 @@ export default function Sanctum() {
                 {/* Controls */}
                 <div className="flex flex-col w-full gap-6">
                     {!isFinished ? (
-                        <div className="flex justify-center gap-4">
-                            <button
-                                onClick={toggleTimer}
-                                className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isActive
-                                    ? 'bg-surface border border-accent/30 text-accent shadow-[0_0_20px_rgba(6,182,212,0.2)]'
-                                    : 'bg-accent text-[#09090b] shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105'
-                                    }`}
-                            >
-                                {isActive ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" />}
-                            </button>
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={toggleTimer}
+                                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isActive
+                                        ? 'bg-surface border border-accent/30 text-accent shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                                        : 'bg-accent text-[#09090b] shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105'
+                                        }`}
+                                >
+                                    {isActive ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" />}
+                                </button>
+                            </div>
+                            {/* End Early button — visible when paused and at least 1 full minute elapsed */}
+                            {!isActive && minutesCompleted >= 1 && (
+                                <button
+                                    onClick={endSessionEarly}
+                                    className="px-5 py-2 rounded-full text-sm font-semibold border border-primary/40 text-primary hover:bg-primary/10 transition-all flex items-center gap-2"
+                                >
+                                    <CheckCircle className="w-4 h-4" />
+                                    Concludi — {Math.floor(minutesCompleted * 10 * 1.2)} XP
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <button
                             onClick={async () => {
                                 if (!userId) return;
-                                const minutesLog = estimatedXP > 0 ? minutesCompleted : 25; // if finished full timer, log 25
+                                const minutesLog = Math.max(minutesCompleted, 1);
                                 try {
                                     const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
                                         method: "POST",
                                         headers: { "Content-Type": "application/json" },
                                         body: JSON.stringify({
-                                            category: 'FOCUS',
+                                            category: 'STUDY',
                                             custom_name: 'Sanctum Deep Focus',
                                             duration_minutes: minutesLog,
                                             stat_type: 'focus',
-                                            intensity_multiplier: 1.2 // Focus sessions have x1.2 intensity bonus
+                                            intensity_multiplier: 1.2
                                         })
                                     });
                                     if (res.ok) {
                                         const data = await res.json();
                                         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-                                        initStats(data.level, data.xp_current, data.xp_to_next, pStats);
-                                        window.location.href = '/'; // Go back to dashboard on finish
+                                        initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+                                        window.location.href = '/';
                                     }
                                 } catch (e) {
                                     console.error(e);
@@ -177,7 +190,7 @@ export default function Sanctum() {
                             }}
                             className="w-full py-4 rounded-xl font-bold bg-primary text-[#09090b] shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:scale-[1.02] transition-transform"
                         >
-                            Claim {Math.floor((estimatedXP > 0 ? minutesCompleted : 25) * 10 * 1.2)} XP
+                            Claim {Math.floor(Math.max(minutesCompleted, 1) * 10 * 1.2)} XP
                         </button>
                     )}
 

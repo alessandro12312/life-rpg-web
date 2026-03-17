@@ -13,6 +13,7 @@ export default function TavernDashboard() {
   const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats, userId, currentStreak } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
   const [completingQuest, setCompletingQuest] = useState<number | null>(null);
+  const [completedQuests, setCompletedQuests] = useState<number[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function TavernDashboard() {
     statType: string,
     category: 'STUDY' | 'WORKOUT' | 'MIXED' | 'CUSTOM'
   ) => {
-    if (!mounted || !userId) return;
+    if (!mounted || !userId || completedQuests.includes(questId)) return;
     setCompletingQuest(questId);
 
     const statMapping: Record<string, string> = {
@@ -91,6 +92,7 @@ export default function TavernDashboard() {
         const data = await res.json();
         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
         initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+        setCompletedQuests(prev => [...prev, questId]);
       }
     } catch (e) {
       console.error(e);
@@ -108,13 +110,24 @@ export default function TavernDashboard() {
     { id: 3, title: "Stay Hydrated (2L)", icon: <Activity className="w-5 h-5" />, duration: 5, type: "end", category: "MIXED" as const },
   ];
 
+  // Dynamic scale: the chart "breathes" with the player. At low stats the polygon
+  // fills ~60-70% of the area so progress is always visible. As stats grow the
+  // scale expands smoothly — no sudden shrink moments.
+  const dynamicMax = mounted && stats
+    ? Math.max(
+      stats.intelligence, stats.strength, stats.endurance,
+      stats.discipline, stats.focus, stats.knowledge
+    ) * 1.5
+    : 5;
+  const fullMark = Math.max(Math.ceil(dynamicMax), 5);
+
   const radarData = mounted && stats ? [
-    { subject: 'INT', A: stats.intelligence || 1, fullMark: 100 },
-    { subject: 'STR', A: stats.strength || 1, fullMark: 100 },
-    { subject: 'END', A: stats.endurance || 1, fullMark: 100 },
-    { subject: 'DIS', A: stats.discipline || 1, fullMark: 100 },
-    { subject: 'FOC', A: stats.focus || 1, fullMark: 100 },
-    { subject: 'KNO', A: stats.knowledge || 1, fullMark: 100 },
+    { subject: 'INT', A: stats.intelligence || 1, fullMark },
+    { subject: 'STR', A: stats.strength || 1, fullMark },
+    { subject: 'END', A: stats.endurance || 1, fullMark },
+    { subject: 'DIS', A: stats.discipline || 1, fullMark },
+    { subject: 'FOC', A: stats.focus || 1, fullMark },
+    { subject: 'KNO', A: stats.knowledge || 1, fullMark },
   ] : [];
 
   return (
@@ -187,7 +200,7 @@ export default function TavernDashboard() {
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                     <PolarGrid stroke="#ffffff20" />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff80', fontSize: 11, fontWeight: 600 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <PolarRadiusAxis angle={30} domain={[0, fullMark]} tick={false} axisLine={false} />
                     <Radar
                       name="Attributes"
                       dataKey="A"
@@ -262,7 +275,7 @@ export default function TavernDashboard() {
                 <div
                   key={quest.id}
                   onClick={() => handleQuestComplete(quest.id, quest.title, quest.duration, quest.type, quest.category)}
-                  className={`bg-surface/40 hover:bg-surface/60 transition duration-300 border border-surface-border p-4 rounded-xl flex items-center gap-4 cursor-pointer relative overflow-hidden group ${completingQuest === quest.id ? 'opacity-50 pointer-events-none' : ''}`}
+                  className={`bg-surface/40 hover:bg-surface/60 transition duration-300 border border-surface-border p-4 rounded-xl flex items-center gap-4 relative overflow-hidden group ${completingQuest === quest.id || completedQuests.includes(quest.id) ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
                 >
                   <div className={`p-3 rounded-lg flex items-center justify-center ${quest.type === 'int' ? 'bg-[#3b82f6]/10 text-[#3b82f6]' :
                     quest.type === 'str' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
@@ -280,7 +293,7 @@ export default function TavernDashboard() {
                   </div>
                   <div className="text-right min-w-[60px]">
                     <button className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-lg group-hover:bg-primary group-hover:text-[#09090b] transition-all duration-300 shadow-sm">
-                      COMPLETE
+                      {completedQuests.includes(quest.id) ? '✓ DONE' : 'COMPLETE'}
                     </button>
                   </div>
                 </div>

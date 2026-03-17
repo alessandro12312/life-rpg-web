@@ -17,10 +17,10 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 
 ### ✅ Implementato
 1. **Auth & Onboarding** — Login Supabase, questionario iniziale, bonus stat + 500 XP
-2. **Dashboard Taverna** (`/`) — Avatar, livello, XP bar animata, radar chart stat, quest board giornaliere, streak badge dinamico
-3. **Log Activity** (`/log-activity`) — Registrazione manuale studio/allenamento → calcolo XP/stat server-side
-4. **Streak System** — Calcolo automatico in `logActivity`, streak multiplier (+5% a 3gg, +10% a 7gg), `currentStreak` e `highestStreak` mostrati nella Dashboard
-5. **Sanctum Focus Timer** (`/sanctum`) — Timer Pomodoro per sessioni di deep work
+2. **Dashboard Taverna** (`/`) — Avatar, livello, XP bar animata, radar chart stat con **scala dinamica** (`fullMark = max(maxStat * 1.5, 5)` — il poligono riempie sempre ~60-70% del chart), quest board giornaliere (completabili **una sola volta per sessione**), streak badge dinamico
+3. **Log Activity** (`/log-activity`) — Registrazione manuale studio/allenamento → calcolo XP/stat server-side. Tutte le chiamate `initStats` includono `currentStreak` e `highestStreak`
+4. **Streak System** — Calcolo automatico in `logActivity`, streak multiplier (+5% a 3gg, +10% a 7gg), `currentStreak` e `highestStreak` in Zustand e mostrati nella Dashboard
+5. **Sanctum Focus Timer** (`/sanctum`) — Timer Pomodoro per deep work. Invia `category: 'STUDY'` (non più 'FOCUS' che non era nell'ENUM DB)
 6. **Grimoire Skill Tree** (`/grimoire`) — Skill tree drag-and-pan interattivo con 7 nodi. SP = `max(0, livello - 5) - spesi`. Bonus passivi reali applicati nel `logActivity` server-side. Tabella DB: `player_skills`
 
 ### 🔲 Da Implementare
@@ -29,6 +29,9 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 9. **Sistema Obiettivi personalizzati** — Goal tracking
 10. **AI Coaching** — Integrazione LLM per suggerimenti
 11. **Musica ambientale** nel Sanctum — Lofi per studio, energica per allenamento
+12. **Auth Guard API** — Middleware NestJS che verifica JWT Supabase (attualmente l'API è aperta)
+13. **Input Validation backend** — DTO con `class-validator` per limitare valori (es. `duration_minutes` max 480)
+14. **Stat Health nel radar** — Il prompt richiede 7 stat, il radar ne mostra 6 (manca Health)
 
 ## Workflow Operativo Passo-Passo
 
