@@ -8,20 +8,51 @@ import { usePlayerStore } from "@/store/usePlayerStore";
 import { supabase } from "@/lib/supabase";
 
 export default function Sanctum() {
-    const { userId, initStats } = usePlayerStore();
-    const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
+    const { userId, initStats, currentStreak } = usePlayerStore();
+    const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
+    const [bonusPercent, setBonusPercent] = useState(0);
 
     // Derived state
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
     const progressPercent = ((25 * 60 - timeLeft) / (25 * 60)) * 100;
 
-    // Calculate estimated XP based on actual elapsed seconds
+    // Base XP = minutes * 10 * 1.2 intensity
     const elapsedSeconds = 25 * 60 - timeLeft;
     const minutesCompleted = Math.floor(elapsedSeconds / 60);
-    const estimatedXP = minutesCompleted * 10;
+    const baseXP = Math.floor(minutesCompleted * 10 * 1.2);
+    const estimatedXP = Math.floor(baseXP * (1 + bonusPercent / 100));
+
+    // Fetch active skill bonuses on mount
+    useEffect(() => {
+        if (!userId) return;
+        // Skill effects that apply to STUDY category sessions
+        const SKILL_EFFECTS: Record<string, { type: string; value: number }> = {
+            int_1: { type: 'study', value: 5 },   // +5% XP from STUDY
+            def_1: { type: 'global', value: 5 },   // +5% XP global
+            def_2: { type: 'global', value: 10 },  // +10% XP global
+        };
+        const fetchBonus = async () => {
+            try {
+                const res = await fetch(`http://localhost:3001/player/${userId}/skills`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const ids: string[] = data.unlockedIds ?? [];
+                let total = 0;
+                for (const id of ids) {
+                    const fx = SKILL_EFFECTS[id];
+                    if (fx) total += fx.value;
+                }
+                // Streak bonus
+                if (currentStreak >= 7) total += 10;
+                else if (currentStreak >= 3) total += 5;
+                setBonusPercent(total);
+            } catch { /* fallback 0 */ }
+        };
+        fetchBonus();
+    }, [userId, currentStreak]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -45,9 +76,31 @@ export default function Sanctum() {
         }
     };
 
-    const endSessionEarly = () => {
+    const endSessionEarly = async () => {
         setIsActive(false);
-        setIsFinished(true);
+        if (!userId) return;
+        const mins = Math.max(minutesCompleted, 1);
+        try {
+            const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    category: 'STUDY',
+                    custom_name: 'Sanctum Deep Focus',
+                    duration_minutes: mins,
+                    stat_type: 'focus',
+                    intensity_multiplier: 1.2
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
+                initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        window.location.href = '/';
     };
 
     return (
@@ -75,7 +128,10 @@ export default function Sanctum() {
                     </Link>
                     <div className="text-right">
                         <p className="text-xs text-foreground/50">Current Yield</p>
-                        <p className="text-primary font-mono font-bold">+{estimatedXP} XP</p>
+                        <p className="text-primary font-mono font-bold">{estimatedXP} XP</p>
+                        {bonusPercent > 0 && (
+                            <p className="text-xs text-emerald-400 font-mono">+{bonusPercent}% bonus</p>
+                        )}
                     </div>
                 </div>
 
@@ -156,7 +212,7 @@ export default function Sanctum() {
                                     className="px-5 py-2 rounded-full text-sm font-semibold border border-primary/40 text-primary hover:bg-primary/10 transition-all flex items-center gap-2"
                                 >
                                     <CheckCircle className="w-4 h-4" />
-                                    Concludi — {Math.floor(minutesCompleted * 10 * 1.2)} XP
+                                    Concludi — {estimatedXP} XP
                                 </button>
                             )}
                         </div>
