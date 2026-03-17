@@ -20,7 +20,7 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 2. **Dashboard Taverna** (`/`) — Avatar, livello, XP bar animata, radar chart stat con **scala dinamica** (`fullMark = max(maxStat * 1.5, 5)` — il poligono riempie sempre ~60-70% del chart), quest board giornaliere (completabili **una sola volta per sessione**), streak badge dinamico
 3. **Log Activity** (`/log-activity`) — Registrazione manuale studio/allenamento → calcolo XP/stat server-side. Tutte le chiamate `initStats` includono `currentStreak` e `highestStreak`
 4. **Streak System** — Calcolo automatico in `logActivity`, streak multiplier (+5% a 3gg, +10% a 7gg), `currentStreak` e `highestStreak` in Zustand e mostrati nella Dashboard
-5. **Sanctum Focus Timer** (`/sanctum`) — Timer Pomodoro per deep work. Invia `category: 'STUDY'` (non più 'FOCUS' che non era nell'ENUM DB)
+5. **Sanctum Focus Timer** (`/sanctum`) — Timer Pomodoro 25 min per deep work. Invia `category: 'STUDY'`, `stat_type: 'focus'`, `intensity: 1.2x`. Pulsante **"Concludi"** per terminare anticipatamente (richiede minimo 1 min). XP calcolati su minuti reali trascorsi (`Math.floor(elapsed/60)`). UI in italiano ("Abbandona")
 6. **Grimoire Skill Tree** (`/grimoire`) — Skill tree drag-and-pan interattivo con 7 nodi. SP = `max(0, livello - 5) - spesi`. Bonus passivi reali applicati nel `logActivity` server-side. Tabella DB: `player_skills`
 
 ### 🔲 Da Implementare
