@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, X, Music, CheckCircle } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,10 @@ export default function Sanctum() {
     const [isActive, setIsActive] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
     const [bonusPercent, setBonusPercent] = useState(0);
+
+    // Audio
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [selectedTrack, setSelectedTrack] = useState<string>("https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3");
 
     // Derived state
     const minutes = Math.floor(timeLeft / 60);
@@ -36,7 +40,10 @@ export default function Sanctum() {
         };
         const fetchBonus = async () => {
             try {
-                const res = await fetch(`http://localhost:3001/player/${userId}/skills`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await fetch(`http://localhost:3001/player/${userId}/skills`, {
+                    headers: { 'Authorization': `Bearer ${session?.access_token}` }
+                });
                 if (!res.ok) return;
                 const data = await res.json();
                 const ids: string[] = data.unlockedIds ?? [];
@@ -60,15 +67,21 @@ export default function Sanctum() {
             interval = setInterval(() => {
                 setTimeLeft((time) => time - 1);
             }, 1000);
+            if (audioRef.current && selectedTrack) {
+                audioRef.current.play().catch(e => console.log("Audio autoplay blocked:", e));
+            }
         } else if (timeLeft === 0 && isActive) {
             if (interval) clearInterval(interval);
             setIsActive(false);
             setIsFinished(true);
+            if (audioRef.current) audioRef.current.pause();
+        } else {
+            if (audioRef.current) audioRef.current.pause();
         }
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isActive, timeLeft]);
+    }, [isActive, timeLeft, selectedTrack]);
 
     const toggleTimer = () => {
         if (!isFinished) {
@@ -81,9 +94,13 @@ export default function Sanctum() {
         if (!userId) return;
         const mins = Math.max(minutesCompleted, 1);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session?.access_token}`
+                },
                 body: JSON.stringify({
                     category: 'STUDY',
                     custom_name: 'Sanctum Deep Focus',
@@ -222,9 +239,13 @@ export default function Sanctum() {
                                 if (!userId) return;
                                 const minutesLog = Math.max(minutesCompleted, 1);
                                 try {
+                                    const { data: { session } } = await supabase.auth.getSession();
                                     const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
                                         method: "POST",
-                                        headers: { "Content-Type": "application/json" },
+                                        headers: { 
+                                            "Content-Type": "application/json",
+                                            "Authorization": `Bearer ${session?.access_token}`
+                                        },
                                         body: JSON.stringify({
                                             category: 'STUDY',
                                             custom_name: 'Sanctum Deep Focus',
@@ -252,16 +273,30 @@ export default function Sanctum() {
 
                     {/* Utilities Bar */}
                     <div className="flex justify-center mt-4">
-                        <button
-                            onClick={() => alert("Lofi Music Player Integration COMING SOON")}
-                            className="flex items-center gap-2 text-foreground/40 hover:text-foreground/80 transition px-4 py-2 rounded-full bg-surface/30 border border-surface-border"
-                        >
-                            <Music className="w-4 h-4" />
-                            <span className="text-xs font-medium">Ambient Lo-Fi</span>
-                        </button>
+                        <div className="flex items-center gap-2 text-foreground/60 transition px-4 py-2 rounded-full bg-surface/30 border border-surface-border">
+                            <Music className="w-4 h-4 text-accent" />
+                            <select
+                                value={selectedTrack}
+                                onChange={(e) => setSelectedTrack(e.target.value)}
+                                className="bg-transparent text-xs font-medium focus:outline-none appearance-none cursor-pointer"
+                            >
+                                <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3">Lofi Study</option>
+                                <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-10874.mp3">Ambient Piano</option>
+                                <option value="">Nessuna Musica</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
+                {/* Hidden Audio Player */}
+                {selectedTrack && (
+                    <audio
+                        ref={audioRef}
+                        src={selectedTrack}
+                        loop
+                        preload="auto"
+                    />
+                )}
             </div>
         </main >
     );

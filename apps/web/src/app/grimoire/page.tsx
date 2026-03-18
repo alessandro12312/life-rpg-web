@@ -52,8 +52,8 @@ export default function TheGrimoire() {
             setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
             try {
                 const [statsRes, skillsRes] = await Promise.all([
-                    fetch(`http://localhost:3001/player/${user.id}`),
-                    fetch(`http://localhost:3001/player/${user.id}/skills`),
+                    fetch(`http://localhost:3001/player/${user.id}`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
+                    fetch(`http://localhost:3001/player/${user.id}/skills`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
                 ]);
                 if (statsRes.ok) {
                     const data = await statsRes.json();

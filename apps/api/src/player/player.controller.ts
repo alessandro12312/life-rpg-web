@@ -1,7 +1,13 @@
-import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, UseGuards } from '@nestjs/common';
 import { PlayerService } from './player.service';
+import { LogActivityDto } from './dto/log-activity.dto';
+import { OnboardPlayerDto } from './dto/onboard-player.dto';
+import { UnlockSkillDto } from './dto/unlock-skill.dto';
+import { CreateGoalDto } from './dto/create-goal.dto';
+import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 
 @Controller('player')
+@UseGuards(SupabaseAuthGuard)
 export class PlayerController {
     constructor(private readonly playerService: PlayerService) { }
 
@@ -11,14 +17,14 @@ export class PlayerController {
     }
 
     @Post(':id/activity')
-    async logActivity(@Param('id') userId: string, @Body() body: any) {
+    async logActivity(@Param('id') userId: string, @Body() body: LogActivityDto) {
         return this.playerService.logActivity(userId, body);
     }
 
     @Post(':id/onboard')
     async onboardPlayer(
         @Param('id') userId: string,
-        @Body() body: { studyHoursWeekly: number; workoutHoursWeekly: number }
+        @Body() body: OnboardPlayerDto
     ) {
         return this.playerService.onboardPlayer(userId, body);
     }
@@ -31,7 +37,7 @@ export class PlayerController {
     @Post(':id/skills/unlock')
     async unlockSkill(
         @Param('id') userId: string,
-        @Body() body: { skillId: string }
+        @Body() body: UnlockSkillDto
     ) {
         return this.playerService.unlockSkill(userId, body.skillId);
     }
@@ -49,7 +55,7 @@ export class PlayerController {
     @Post(':id/goals')
     async createGoal(
         @Param('id') userId: string,
-        @Body() body: { title: string; category: string; target_minutes: number; deadline?: string; xp_reward?: number }
+        @Body() body: CreateGoalDto
     ) {
         return this.playerService.createGoal(userId, body);
     }

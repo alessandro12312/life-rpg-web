@@ -25,13 +25,13 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 7. **Achievement System** (`/achievements` tab Trofei) — 10 badge automatici (`ACHIEVEMENT_CATALOG`): first_blood, level_5, level_10, streak_3/7/30, study_10, workout_10, sanctum_5, skill_1. `checkAchievements()` chiamato in `logActivity`. Tabella: `achievements`
 8. **Goal Tracking** (`/achievements` tab Obiettivi) — Obiettivi personalizzati con target in ore, progress bar, XP bonus al completamento (200 XP default). `updateGoalProgress()` chiamato in `logActivity`. Form creazione nuovi goal. Tabella: `goals`
 
+9. **Sanctum Audio** — Musica ambientale integrata nel timer Pomodoro (Lofi/Ambient) governata da useRef React
+10. **API Security & Validation** — NestJS SupabaseAuthGuard in tutto il controller; `class-validator` per validare payload (es. divieto log > 8h); Injection token Bearer nel client
+11. **Health Stat Radar** — Dashboard aggiornata per proiettare la 7° statistica "HLT" su Recharts radar.
+
 ### 🔲 Da Implementare
-9. **Library** (`/library`) — Upload appunti, AI genera quiz/flashcard, rispondere = XP
-10. **AI Coaching** — Integrazione LLM per suggerimenti
-11. **Musica ambientale** nel Sanctum — Lofi per studio, energica per allenamento
-12. **Auth Guard API** — Middleware NestJS che verifica JWT Supabase (attualmente l'API è aperta)
-13. **Input Validation backend** — DTO con `class-validator` per limitare valori (es. `duration_minutes` max 480)
-14. **Stat Health nel radar** — Il prompt richiede 7 stat, il radar ne mostra 6 (manca Health)
+12. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
+13. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
 
 ## Workflow Operativo Passo-Passo
 

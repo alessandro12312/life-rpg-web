@@ -36,7 +36,9 @@ export default function TavernDashboard() {
 
       // Hydrate with Real Engine Data
       try {
-        const res = await fetch(`http://localhost:3001/player/${user.id}`);
+        const res = await fetch(`http://localhost:3001/player/${user.id}`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
         if (res.ok) {
           const data = await res.json();
           const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
@@ -77,9 +79,13 @@ export default function TavernDashboard() {
     };
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           category,
           custom_name: questTitle,
@@ -116,7 +122,7 @@ export default function TavernDashboard() {
   const dynamicMax = mounted && stats
     ? Math.max(
       stats.intelligence, stats.strength, stats.endurance,
-      stats.discipline, stats.focus, stats.knowledge
+      stats.discipline, stats.focus, stats.knowledge, stats.health
     ) * 1.5
     : 5;
   const fullMark = Math.max(Math.ceil(dynamicMax), 5);
@@ -128,6 +134,7 @@ export default function TavernDashboard() {
     { subject: 'DIS', A: stats.discipline || 1, fullMark },
     { subject: 'FOC', A: stats.focus || 1, fullMark },
     { subject: 'KNO', A: stats.knowledge || 1, fullMark },
+    { subject: 'HLT', A: stats.health || 1, fullMark },
   ] : [];
 
   return (

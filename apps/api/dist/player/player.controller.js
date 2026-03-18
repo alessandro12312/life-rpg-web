@@ -15,6 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlayerController = void 0;
 const common_1 = require("@nestjs/common");
 const player_service_1 = require("./player.service");
+const log_activity_dto_1 = require("./dto/log-activity.dto");
+const onboard_player_dto_1 = require("./dto/onboard-player.dto");
+const unlock_skill_dto_1 = require("./dto/unlock-skill.dto");
+const create_goal_dto_1 = require("./dto/create-goal.dto");
+const supabase_auth_guard_1 = require("../auth/supabase-auth.guard");
 let PlayerController = class PlayerController {
     playerService;
     constructor(playerService) {
@@ -58,7 +63,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, log_activity_dto_1.LogActivityDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "logActivity", null);
 __decorate([
@@ -66,7 +71,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, onboard_player_dto_1.OnboardPlayerDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "onboardPlayer", null);
 __decorate([
@@ -81,7 +86,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, unlock_skill_dto_1.UnlockSkillDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "unlockSkill", null);
 __decorate([
@@ -103,11 +108,12 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, create_goal_dto_1.CreateGoalDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "createGoal", null);
 exports.PlayerController = PlayerController = __decorate([
     (0, common_1.Controller)('player'),
+    (0, common_1.UseGuards)(supabase_auth_guard_1.SupabaseAuthGuard),
     __metadata("design:paramtypes", [player_service_1.PlayerService])
 ], PlayerController);
 //# sourceMappingURL=player.controller.js.map

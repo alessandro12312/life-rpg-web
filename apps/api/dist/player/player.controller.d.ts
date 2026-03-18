@@ -1,19 +1,18 @@
 import { PlayerService } from './player.service';
+import { LogActivityDto } from './dto/log-activity.dto';
+import { OnboardPlayerDto } from './dto/onboard-player.dto';
+import { UnlockSkillDto } from './dto/unlock-skill.dto';
+import { CreateGoalDto } from './dto/create-goal.dto';
 export declare class PlayerController {
     private readonly playerService;
     constructor(playerService: PlayerService);
     getPlayerStats(userId: string): Promise<any>;
-    logActivity(userId: string, body: any): Promise<any>;
-    onboardPlayer(userId: string, body: {
-        studyHoursWeekly: number;
-        workoutHoursWeekly: number;
-    }): Promise<any>;
+    logActivity(userId: string, body: LogActivityDto): Promise<any>;
+    onboardPlayer(userId: string, body: OnboardPlayerDto): Promise<any>;
     getPlayerSkills(userId: string): Promise<{
         unlockedIds: string[];
     }>;
-    unlockSkill(userId: string, body: {
-        skillId: string;
-    }): Promise<{
+    unlockSkill(userId: string, body: UnlockSkillDto): Promise<{
         unlockedIds: string[];
     }>;
     getAchievements(userId: string): Promise<{
@@ -25,11 +24,5 @@ export declare class PlayerController {
         unlockedIds: any[];
     }>;
     getGoals(userId: string): Promise<any[]>;
-    createGoal(userId: string, body: {
-        title: string;
-        category: string;
-        target_minutes: number;
-        deadline?: string;
-        xp_reward?: number;
-    }): Promise<any>;
+    createGoal(userId: string, body: CreateGoalDto): Promise<any>;
 }

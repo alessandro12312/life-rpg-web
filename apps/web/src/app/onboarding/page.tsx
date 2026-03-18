@@ -84,7 +84,10 @@ export default function OnboardingPage() {
 
             const res = await fetch(`http://localhost:3001/player/${currentUserId}/onboard`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                },
                 body: JSON.stringify({
                     studyHoursWeekly: formData.studyHoursWeekly,
                     workoutHoursWeekly: formData.workoutHoursWeekly
