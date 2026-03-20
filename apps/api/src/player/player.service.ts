@@ -7,7 +7,7 @@ export interface SkillDef {
     id: string;
     requires: string[];
     effect: {
-        type: 'xp_multiplier_category' | 'xp_multiplier_global' | 'stat_gain_multiplier' | 'streak_bonus';
+        type: 'xp_multiplier_category' | 'xp_multiplier_global' | 'stat_gain_multiplier' | 'streak_bonus' | 'stat_gain_streak_bonus';
         category?: 'STUDY' | 'WORKOUT';
         value: number;
     };
@@ -28,6 +28,10 @@ export const SKILL_CATALOG: SkillDef[] = [
     // Defense / Consistency
     { id: 'def_1', requires: ['core_1'], effect: { type: 'xp_multiplier_global', value: 0.05 } },
     { id: 'def_2', requires: ['def_1'], effect: { type: 'xp_multiplier_global', value: 0.10 } },
+
+    // Endurance / Vitality
+    { id: 'end_1', requires: ['core_1'], effect: { type: 'stat_gain_streak_bonus', value: 0.01 } },
+    { id: 'end_2', requires: ['end_1'], effect: { type: 'stat_gain_streak_bonus', value: 0.02 } },
 ];
 
 function getSkillById(id: string): SkillDef | undefined {
@@ -313,12 +317,28 @@ export class PlayerService {
             .filter(s => s.effect.type === 'stat_gain_multiplier')
             .reduce((acc, s) => acc + s.effect.value, 0);
 
-        const xp_yield = Math.floor(payload.duration_minutes * 10 * intensity * xpMultiplier);
-        const stat_gain = parseFloat(((payload.duration_minutes / 60) * 0.1 * intensity * statGainMult).toFixed(2));
+        // Skill: endurance_streak_bonus
+        const enduranceStreakBonusMultiplier = activeSkills
+            .filter(s => s.effect.type === 'stat_gain_streak_bonus')
+            .reduce((acc, s) => acc + (current_streak * s.effect.value), 0);
 
+        const xp_yield = Math.floor(payload.duration_minutes * 10 * intensity * xpMultiplier);
+        
+        // Base Primary Stat Gain (nerfed from 0.1 to 0.08)
+        const primary_stat_gain = parseFloat(((payload.duration_minutes / 60) * 0.08 * intensity * statGainMult).toFixed(2));
+        
+        // Secondary Stats Gain
+        const base_endurance_gain = (payload.duration_minutes / 60) * 0.03 * intensity * statGainMult;
+        const extra_endurance_gain = (payload.duration_minutes / 60) * enduranceStreakBonusMultiplier * intensity;
+        const endurance_gain = parseFloat((base_endurance_gain + extra_endurance_gain).toFixed(2));
+        
+        const knowledge_gain = payload.category === 'STUDY' ? parseFloat(((payload.duration_minutes / 60) * 0.05 * intensity * statGainMult).toFixed(2)) : 0;
+
+        let levels_gained = 0;
         xp_current += xp_yield;
         while (xp_current >= xp_to_next) {
             level += 1;
+            levels_gained += 1;
             xp_current -= xp_to_next;
             xp_to_next = Math.floor(1000 * Math.pow(level, 1.5));
         }
@@ -331,15 +351,51 @@ export class PlayerService {
 
         // Stat update
         let stats_yield: Record<string, number> = {};
-        if (payload.stat_type && stat_gain > 0) {
-            stats_yield[payload.stat_type] = stat_gain;
-            const { data: currentStats, error: statError } = await this.supabase.getClient()
-                .from('character_stats').select(payload.stat_type).eq('user_id', userId).single();
-            if (!statError && currentStats) {
-                const currentVal = (currentStats as any)[payload.stat_type] || 1;
+        const { data: currentStats, error: statError } = await this.supabase.getClient()
+            .from('character_stats').select('*').eq('user_id', userId).single();
+
+        if (!statError && currentStats) {
+            let updates: any = {};
+            
+            // Primary Stat
+            if (payload.stat_type && primary_stat_gain > 0) {
+                stats_yield[payload.stat_type] = primary_stat_gain;
+                updates[payload.stat_type] = parseFloat((Number(currentStats[payload.stat_type] || 1) + primary_stat_gain).toFixed(2));
+            }
+            
+            // Endurance (all activities)
+            if (endurance_gain > 0) {
+                if (payload.stat_type === 'endurance') {
+                    updates['endurance'] = parseFloat((Number(updates['endurance'] || currentStats.endurance || 1) + endurance_gain).toFixed(2));
+                    stats_yield['endurance'] = (stats_yield['endurance'] || 0) + endurance_gain;
+                } else {
+                    stats_yield['endurance'] = endurance_gain;
+                    updates['endurance'] = parseFloat((Number(currentStats.endurance || 1) + endurance_gain).toFixed(2));
+                }
+            }
+
+            // Knowledge (study activities)
+            if (knowledge_gain > 0) {
+                if (payload.stat_type === 'knowledge') {
+                    updates['knowledge'] = parseFloat((Number(updates['knowledge'] || currentStats.knowledge || 1) + knowledge_gain).toFixed(2));
+                    stats_yield['knowledge'] = (stats_yield['knowledge'] || 0) + knowledge_gain;
+                } else {
+                    stats_yield['knowledge'] = knowledge_gain;
+                    updates['knowledge'] = parseFloat((Number(currentStats.knowledge || 1) + knowledge_gain).toFixed(2));
+                }
+            }
+
+            // Health (levels gained)
+            if (levels_gained > 0) {
+                const health_gain = levels_gained * 0.5;
+                stats_yield['health'] = health_gain;
+                updates['health'] = parseFloat((Number(currentStats.health || 1) + health_gain).toFixed(2));
+            }
+
+            if (Object.keys(updates).length > 0) {
                 await this.supabase.getClient()
                     .from('character_stats')
-                    .update({ [payload.stat_type]: parseFloat((Number(currentVal) + stat_gain).toFixed(2)) })
+                    .update(updates)
                     .eq('user_id', userId);
             }
         }

@@ -37,7 +37,7 @@ export default function TavernDashboard() {
       // Hydrate with Real Engine Data
       try {
         const res = await fetch(`http://localhost:3001/player/${user.id}`, {
-            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         if (res.ok) {
           const data = await res.json();
@@ -82,9 +82,9 @@ export default function TavernDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
         method: "POST",
-        headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.access_token}`
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({
           category,
@@ -256,24 +256,24 @@ export default function TavernDashboard() {
 
         {/* Navigation Links */}
         <section className="grid grid-cols-3 gap-4">
-            <Link href="/library" className="block w-full">
-              <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-                <BookOpen className="w-5 h-5 text-[#3b82f6]" />
-                <span className="text-sm font-medium">The Library</span>
-              </button>
-            </Link>
-            <Link href="/grimoire" className="block w-full">
-              <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-                <User className="w-5 h-5 text-purple-400" />
-                <span className="text-sm font-medium">Grimoire</span>
-              </button>
-            </Link>
-            <Link href="/achievements" className="block w-full">
-              <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-                <Trophy className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium">Trofei</span>
-              </button>
-            </Link>
+          <Link href="/library" className="block w-full">
+            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+              <BookOpen className="w-5 h-5 text-[#3b82f6]" />
+              <span className="text-sm font-medium">Library</span>
+            </button>
+          </Link>
+          <Link href="/grimoire" className="block w-full">
+            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+              <User className="w-5 h-5 text-purple-400" />
+              <span className="text-sm font-medium">Grimoire</span>
+            </button>
+          </Link>
+          <Link href="/achievements" className="block w-full">
+            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">Trofei</span>
+            </button>
+          </Link>
         </section>
 
         {/* Quest Board */}

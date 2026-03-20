@@ -3,7 +3,7 @@ export interface SkillDef {
     id: string;
     requires: string[];
     effect: {
-        type: 'xp_multiplier_category' | 'xp_multiplier_global' | 'stat_gain_multiplier' | 'streak_bonus';
+        type: 'xp_multiplier_category' | 'xp_multiplier_global' | 'stat_gain_multiplier' | 'streak_bonus' | 'stat_gain_streak_bonus';
         category?: 'STUDY' | 'WORKOUT';
         value: number;
     };

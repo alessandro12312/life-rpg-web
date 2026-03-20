@@ -28,10 +28,11 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 9. **Sanctum Audio** — Musica ambientale integrata nel timer Pomodoro (Lofi/Ambient) governata da useRef React
 10. **API Security & Validation** — NestJS SupabaseAuthGuard in tutto il controller; `class-validator` per validare payload (es. divieto log > 8h); Injection token Bearer nel client
 11. **Health Stat Radar** — Dashboard aggiornata per proiettare la 7° statistica "HLT" su Recharts radar.
+12. **Stat Rebalancing & Endurance Runes** — Aumenti passivi di Endurance (0.03/h) globale e Knowledge (0.05/h) in STUDY. Salute aumenta coi livelli (+0.5). Aggiunte due rune Vitality nel Grimorio. Fixato bug AuthHeader nello sblocco skill.
 
 ### 🔲 Da Implementare
-12. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
-13. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
+13. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
+14. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
 
 ## Workflow Operativo Passo-Passo
 

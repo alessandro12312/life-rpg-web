@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, BookMarked, Zap, Shield, Brain, X } from "lucide-react";
+import { ArrowLeft, BookMarked, Zap, Shield, Brain, X, Activity } from "lucide-react";
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { supabase } from "@/lib/supabase";
@@ -23,6 +23,10 @@ const SKILLS = [
     // Defense / Consistency Path
     { id: "def_1", title: "Steadfast", x: 0, y: -160, icon: <Shield className="w-5 h-5" />, requires: ["core_1"], desc: "+5% XP from every activity regardless of category." },
     { id: "def_2", title: "Aegis of Time", x: 0, y: -300, icon: <Shield className="w-5 h-5" />, requires: ["def_1"], desc: "Additional +10% global XP bonus on all activities." },
+
+    // Endurance / Vitality Path
+    { id: "end_1", title: "Resilient Blood", x: 0, y: 160, icon: <Activity className="w-5 h-5" />, requires: ["core_1"], desc: "Bonus Endurance gain based on your active login streak." },
+    { id: "end_2", title: "Unbroken Spirit", x: 0, y: 300, icon: <Activity className="w-5 h-5" />, requires: ["end_1"], desc: "Further increases the Endurance streak multiplier." },
 ];
 
 export default function TheGrimoire() {
@@ -77,9 +81,13 @@ export default function TheGrimoire() {
         if (!userId || unlocking) return;
         setUnlocking(true);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(`http://localhost:3001/player/${userId}/skills/unlock`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session?.access_token}`
+                },
                 body: JSON.stringify({ skillId }),
             });
             if (res.ok) {
@@ -142,6 +150,9 @@ export default function TheGrimoire() {
 
                             <line x1="400" y1="400" x2="400" y2="240" stroke="var(--primary)" strokeWidth="3" />
                             <line x1="400" y1="240" x2="400" y2="100" stroke="var(--surface-border)" strokeWidth="2" />
+
+                            <line x1="400" y1="400" x2="400" y2="560" stroke="var(--primary)" strokeWidth="3" strokeDasharray="4 4" />
+                            <line x1="400" y1="560" x2="400" y2="700" stroke="var(--surface-border)" strokeWidth="2" />
                         </svg>
                     </div>
 
