@@ -30,7 +30,7 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 11. **Health Stat Radar** — Dashboard aggiornata per proiettare la 7° statistica "HLT" su Recharts radar.
 12. **Stat Rebalancing & Endurance Runes** — Aumenti passivi di Endurance (0.03/h) globale e Knowledge (0.05/h) in STUDY. Salute aumenta coi livelli (+0.5). Aggiunte due rune Vitality nel Grimorio. Fixato bug AuthHeader nello sblocco skill.
 13. **Cronologia Attività (The Chronicles)** — Endpoint `GET /player/:id/activities`, UI timeline `/history` accessibile dalla Taverna, per consultare vecchie attività, durata, XP e specifici Stat gains.
-14. **Character Creation (Race & Class)** — Aggiornato `/onboarding` con scelte di Razza (es. Orco) e Classe (es. Barbaro). Applicati bonus alle stats base. Generati artwork Avatar AI e risolto il bug persistenza Zustand al logout.
+14. **Character Creation (Race, Class & Aspect)** — Aggiornato `/onboarding` con scelte di Razza (es. Orco), Classe (es. Barbaro) e Aspetto (Maschio/Femmina). Applicati bonus alle stats base. Generati artwork Avatar AI sdoppiati per genere e risolto il bug persistenza Zustand al logout.
 
 ### 🔲 Da Implementare
 15. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
