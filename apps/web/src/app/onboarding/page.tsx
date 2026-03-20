@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { usePlayerStore } from "@/store/usePlayerStore";
-import { BookOpen, Swords, Brain, ArrowRight } from "lucide-react";
+import { BookOpen, Swords, Brain, ArrowRight, User, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function OnboardingPage() {
@@ -17,7 +17,9 @@ export default function OnboardingPage() {
     const [formData, setFormData] = useState({
         studyHoursWeekly: 5,
         workoutHoursWeekly: 3,
-        primaryGoal: "balanced"
+        primaryGoal: "balanced",
+        race: "umano",
+        className: "guerriero"
     });
 
     const steps = [
@@ -57,6 +59,54 @@ export default function OnboardingPage() {
                     <div className="text-2xl font-bold text-center text-primary">{formData.workoutHoursWeekly} Ore</div>
                 </div>
             )
+        },
+        {
+            title: "Scegli la tua Stirpe",
+            desc: "Ogni razza possiede un dono innato. Chi sei?",
+            icon: <User className="w-12 h-12 text-emerald-400 mb-4" />,
+            input: (
+                <div className="grid grid-cols-2 gap-4 w-full mt-6">
+                    {["Umano", "Elfo", "Nano", "Orco"].map(r => (
+                        <button
+                            key={r}
+                            onClick={() => setFormData({ ...formData, race: r.toLowerCase() })}
+                            className={`p-3 rounded-xl border transition-all ${formData.race === r.toLowerCase() ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-surface border-surface-border hover:bg-surface/80'}`}
+                        >
+                            <div className="font-bold">{r}</div>
+                            <div className="text-[10px] text-foreground/50 mt-1">
+                                {r === 'Umano' && '+1 Tutte le Stat'}
+                                {r === 'Elfo' && '+3 INT, +2 FOC'}
+                                {r === 'Nano' && '+3 DIS, +2 END'}
+                                {r === 'Orco' && '+3 STR, +2 END'}
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            )
+        },
+        {
+            title: "Il tuo Destino",
+            desc: "Quale sentiero percorrerai in questo mondo?",
+            icon: <Sparkles className="w-12 h-12 text-purple-400 mb-4" />,
+            input: (
+                <div className="grid grid-cols-2 gap-4 w-full mt-6">
+                    {["Guerriero", "Mago", "Ladro", "Chierico"].map(c => (
+                        <button
+                            key={c}
+                            onClick={() => setFormData({ ...formData, className: c.toLowerCase() })}
+                            className={`p-3 rounded-xl border transition-all ${formData.className === c.toLowerCase() ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-surface border-surface-border hover:bg-surface/80'}`}
+                        >
+                            <div className="font-bold">{c}</div>
+                            <div className="text-[10px] text-foreground/50 mt-1">
+                                {c === 'Guerriero' && '+2 STR, +2 END'}
+                                {c === 'Mago' && '+2 INT, +2 KNO'}
+                                {c === 'Ladro' && '+2 FOC, +2 STR'}
+                                {c === 'Chierico' && '+2 KNO, +2 DIS'}
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            )
         }
     ];
 
@@ -90,7 +140,9 @@ export default function OnboardingPage() {
                 },
                 body: JSON.stringify({
                     studyHoursWeekly: formData.studyHoursWeekly,
-                    workoutHoursWeekly: formData.workoutHoursWeekly
+                    workoutHoursWeekly: formData.workoutHoursWeekly,
+                    race: formData.race,
+                    className: formData.className
                 })
             });
 

@@ -21,6 +21,11 @@ export class PlayerController {
         return this.playerService.logActivity(userId, body);
     }
 
+    @Get(':id/activities')
+    async getActivityHistory(@Param('id') userId: string) {
+        return this.playerService.getActivityHistory(userId);
+    }
+
     @Post(':id/onboard')
     async onboardPlayer(
         @Param('id') userId: string,

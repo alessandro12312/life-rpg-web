@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut, Trophy } from "lucide-react";
+import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut, Trophy, History } from "lucide-react";
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
@@ -10,8 +10,11 @@ import { supabase } from "@/lib/supabase";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats, userId, currentStreak } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats, userId, currentStreak, logout } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
+  const [characterClass, setCharacterClass] = useState("Novice");
+  const [characterRace, setCharacterRace] = useState("Umano");
+  const [avatarId, setAvatarId] = useState<string | null>(null);
   const [completingQuest, setCompletingQuest] = useState<number | null>(null);
   const [completedQuests, setCompletedQuests] = useState<number[]>([]);
   const router = useRouter();
@@ -43,6 +46,9 @@ export default function TavernDashboard() {
           const data = await res.json();
           const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
           initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+          setCharacterClass(data.class_name || "Novice");
+          setCharacterRace(data.race || "Umano");
+          setAvatarId(data.avatar_id || null);
         }
       } catch (e) {
         console.error("Engine API unreachable, falling back to local Zustand cache.", e);
@@ -61,6 +67,7 @@ export default function TavernDashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    logout();
     router.push("/login");
   };
 
@@ -155,40 +162,52 @@ export default function TavernDashboard() {
           <div className="relative group cursor-pointer">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/40 transition duration-500"></div>
             <div className="w-24 h-24 bg-surface-border rounded-full border-2 border-primary/50 flex items-center justify-center relative z-10 overflow-hidden">
-              <User className="w-10 h-10 text-primary" />
+              {avatarId ? (
+                <img
+                  src={`/avatars/${avatarId}.png`}
+                  className="w-full h-full object-cover"
+                  alt="Avatar"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; setAvatarId(null); }}
+                />
+              ) : (
+                <User className="w-10 h-10 text-primary" />
+              )}
             </div>
             <div className="absolute -bottom-2 -right-2 bg-primary text-[#09090b] text-xs font-bold px-2 py-1 rounded-md z-20 shadow-lg">
               LVL {mounted ? level : '-'}
             </div>
           </div>
 
-          <div className="flex-1 w-full pr-8">
-            <div className="flex justify-between items-end mb-2">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">{displayUsername}</h1>
-                <p className="text-sm text-foreground/60 flex items-center gap-2">
-                  <span className="text-accent font-medium">Class: Novice</span>
-                  <span className="inline-flex items-center gap-1 bg-surface-border px-2 py-0.5 rounded text-xs">
+          <div className="flex-1 w-full md:pr-8">
+            <div className="flex justify-between items-end mb-3 md:mb-2 pr-10 md:pr-0">
+              <div className="w-full md:w-auto">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight break-all md:break-normal">{displayUsername}</h1>
+                <p className="text-xs md:text-sm text-foreground/60 flex flex-wrap items-center gap-1.5 md:gap-2 mt-1">
+                  <span className="text-accent font-medium capitalize">{mounted ? `${characterRace} ${characterClass}` : 'Umano Novice'}</span>
+                  <span className="inline-flex items-center gap-1 bg-surface-border px-2 py-0.5 rounded text-[10px] md:text-xs">
                     <Flame className="w-3 h-3 text-orange-500" />
                     {mounted ? `Day ${currentStreak} Streak` : 'Day - Streak'}
                   </span>
                 </p>
               </div>
-              <div className="text-right">
+              <div className="hidden md:block text-right whitespace-nowrap pl-4">
                 <span className="text-primary font-mono font-bold">{mounted ? Math.floor(currentXP) : 0}</span>
                 <span className="text-foreground/40 font-mono text-sm"> / {mounted ? Math.floor(xpToNextLevel) : 1000} XP</span>
               </div>
             </div>
 
-            <div className="h-3 w-full bg-surface-border rounded-full overflow-hidden shadow-inner relative">
+            <div className="h-5 md:h-3 w-full bg-surface-border rounded-full overflow-hidden shadow-inner relative flex items-center justify-center">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-primary/50 to-primary rounded-full relative"
+                className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-primary/50 to-primary rounded-full"
               >
                 <div className="absolute top-0 bottom-0 right-0 w-8 bg-gradient-to-l from-white/30 to-transparent blur-sm"></div>
               </motion.div>
+              <div className="absolute z-10 text-[10px] md:hidden font-mono font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] tracking-wider">
+                {mounted ? Math.floor(currentXP) : 0} / {mounted ? Math.floor(xpToNextLevel) : 1000} XP
+              </div>
             </div>
           </div>
         </section>
@@ -255,17 +274,23 @@ export default function TavernDashboard() {
         </section>
 
         {/* Navigation Links */}
-        <section className="grid grid-cols-3 gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Link href="/history" className="block w-full">
+            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+              <History className="w-5 h-5 text-amber-500" />
+              <span className="text-sm font-medium">Cronologia</span>
+            </button>
+          </Link>
           <Link href="/library" className="block w-full">
             <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
               <BookOpen className="w-5 h-5 text-[#3b82f6]" />
-              <span className="text-sm font-medium">Library</span>
+              <span className="text-sm font-medium">Scrittoio</span>
             </button>
           </Link>
           <Link href="/grimoire" className="block w-full">
             <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
               <User className="w-5 h-5 text-purple-400" />
-              <span className="text-sm font-medium">Grimoire</span>
+              <span className="text-sm font-medium">Grimorio</span>
             </button>
           </Link>
           <Link href="/achievements" className="block w-full">

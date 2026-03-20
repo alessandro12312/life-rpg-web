@@ -31,6 +31,9 @@ let PlayerController = class PlayerController {
     async logActivity(userId, body) {
         return this.playerService.logActivity(userId, body);
     }
+    async getActivityHistory(userId) {
+        return this.playerService.getActivityHistory(userId);
+    }
     async onboardPlayer(userId, body) {
         return this.playerService.onboardPlayer(userId, body);
     }
@@ -66,6 +69,13 @@ __decorate([
     __metadata("design:paramtypes", [String, log_activity_dto_1.LogActivityDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "logActivity", null);
+__decorate([
+    (0, common_1.Get)(':id/activities'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PlayerController.prototype, "getActivityHistory", null);
 __decorate([
     (0, common_1.Post)(':id/onboard'),
     __param(0, (0, common_1.Param)('id')),

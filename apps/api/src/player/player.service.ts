@@ -223,6 +223,7 @@ export class PlayerService {
         return data;
     }
 
+    // ── Goal Progress Update ──────────────────────────────────────────────────
     async updateGoalProgress(userId: string, category: string, minutes: number, currentLevel: number, currentXP: number, xpToNext: number) {
         // Fetch active goals matching category
         const { data: goals } = await this.supabase.getClient()
@@ -255,6 +256,19 @@ export class PlayerService {
                 .update({ xp_current: xp, xp_to_next: xpNext, level: lvl })
                 .eq('id', userId);
         }
+    }
+
+    // ── Activity History ──────────────────────────────────────────────────────
+    async getActivityHistory(userId: string, limit: number = 50) {
+        const { data, error } = await this.supabase.getClient()
+            .from('activity_logs')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+            
+        if (error) throw new Error(error.message);
+        return data ?? [];
     }
 
     // ── Log Activity ──────────────────────────────────────────────────────────
@@ -423,12 +437,25 @@ export class PlayerService {
     }
 
     // ── Onboarding ────────────────────────────────────────────────────────────
-    async onboardPlayer(userId: string, payload: { studyHoursWeekly: number; workoutHoursWeekly: number }) {
-        let intelligenceBonus = 0, disciplineBonus = 0, strengthBonus = 0, enduranceBonus = 0;
-        if (payload.studyHoursWeekly > 20) { intelligenceBonus = 2.0; disciplineBonus = 1.5; }
-        else if (payload.studyHoursWeekly >= 10) { intelligenceBonus = 1.0; disciplineBonus = 0.5; }
-        if (payload.workoutHoursWeekly > 7) { strengthBonus = 2.0; enduranceBonus = 1.5; }
-        else if (payload.workoutHoursWeekly >= 3) { strengthBonus = 1.0; enduranceBonus = 0.5; }
+    async onboardPlayer(userId: string, payload: { studyHoursWeekly: number; workoutHoursWeekly: number; race: string; className: string; avatarId?: string }) {
+        let intelligenceBonus = 0, disciplineBonus = 0, strengthBonus = 0, enduranceBonus = 0, focusBonus = 0, knowledgeBonus = 0;
+        
+        if (payload.studyHoursWeekly > 20) { intelligenceBonus += 2.0; disciplineBonus += 1.5; }
+        else if (payload.studyHoursWeekly >= 10) { intelligenceBonus += 1.0; disciplineBonus += 0.5; }
+        if (payload.workoutHoursWeekly > 7) { strengthBonus += 2.0; enduranceBonus += 1.5; }
+        else if (payload.workoutHoursWeekly >= 3) { strengthBonus += 1.0; enduranceBonus += 0.5; }
+
+        const race = payload.race?.toLowerCase() || 'human';
+        if (race === 'umano' || race === 'human') { intelligenceBonus+=1; strengthBonus+=1; enduranceBonus+=1; disciplineBonus+=1; focusBonus+=1; knowledgeBonus+=1; }
+        else if (race === 'orco' || race === 'orc') { strengthBonus+=3; enduranceBonus+=2; }
+        else if (race === 'elfo' || race === 'elf') { intelligenceBonus+=3; focusBonus+=2; }
+        else if (race === 'nano' || race === 'dwarf') { disciplineBonus+=3; enduranceBonus+=2; }
+
+        const cls = payload.className?.toLowerCase() || 'warrior';
+        if (cls === 'barbaro' || cls === 'barbarian' || cls === 'warrior' || cls === 'guerriero') { strengthBonus+=2; enduranceBonus+=2; }
+        else if (cls === 'mago' || cls === 'mage') { intelligenceBonus+=2; knowledgeBonus+=2; }
+        else if (cls === 'ladro' || cls === 'rogue') { focusBonus+=2; strengthBonus+=2; }
+        else if (cls === 'chierico' || cls === 'cleric') { knowledgeBonus+=2; disciplineBonus+=2; }
 
         const { data: stats } = await this.supabase.getClient()
             .from('character_stats').select('*').eq('user_id', userId).single();
@@ -438,14 +465,22 @@ export class PlayerService {
                 discipline: parseFloat((Number(stats.discipline) + disciplineBonus).toFixed(2)),
                 strength: parseFloat((Number(stats.strength) + strengthBonus).toFixed(2)),
                 endurance: parseFloat((Number(stats.endurance) + enduranceBonus).toFixed(2)),
+                focus: parseFloat((Number(stats.focus || 1) + focusBonus).toFixed(2)),
+                knowledge: parseFloat((Number(stats.knowledge || 1) + knowledgeBonus).toFixed(2)),
             }).eq('user_id', userId);
         }
 
+        const avatarId = payload.avatarId || `${race}-${cls}`;
         const { data: userRow } = await this.supabase.getClient()
             .from('users').select('xp_current').eq('id', userId).single();
         if (userRow) {
             await this.supabase.getClient().from('users')
-                .update({ xp_current: userRow.xp_current + 500 }).eq('id', userId);
+                .update({ 
+                    xp_current: userRow.xp_current + 500,
+                    race: payload.race,
+                    class_name: payload.className,
+                    avatar_id: avatarId
+                }).eq('id', userId);
         }
 
         // Create initial goals based on onboarding answers

@@ -33,6 +33,7 @@ interface PlayerState {
     resetStats: () => void;
     isOnboarded: boolean;
     completeOnboarding: () => void;
+    logout: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -83,7 +84,13 @@ export const usePlayerStore = create<PlayerState>()(
 
             resetStats: () => set({ level: 1, currentXP: 0, xpToNextLevel: 1000 }),
 
-            completeOnboarding: () => set({ isOnboarded: true })
+            completeOnboarding: () => set({ isOnboarded: true }),
+
+            logout: () => set({ 
+                level: 1, currentXP: 0, xpToNextLevel: 1000, 
+                stats: { intelligence: 1, strength: 1, endurance: 1, discipline: 1, focus: 1, knowledge: 1, health: 1 },
+                userId: null, username: null, isOnboarded: false, currentStreak: 0, highestStreak: 0
+            })
         }),
         {
             name: 'life-rpg-player-storage',

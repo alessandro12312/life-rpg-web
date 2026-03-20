@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS public.users (
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     avatar_url TEXT,
+    avatar_id TEXT,
     class_name VARCHAR(50) DEFAULT 'Novice',
+    race VARCHAR(50) DEFAULT 'Human',
     
     -- Progression
     level INTEGER DEFAULT 1,
@@ -140,3 +142,7 @@ VALUES
 ('d501b80d-6e41-4c6e-89da-5a02e6e2aa01', 'Focus del Monaco', '+10% bonus XP sulle attività di tipo STUDY o FOCUS.', 5, 2, 'FOCUS'),
 ('2d0bd705-baaf-4aa9-94b2-cbf3906161c1', 'Recupero Muscolare', '+10% XP durante gli allenamenti.', 3, 1, 'ENDURANCE')
 ON CONFLICT DO NOTHING;
+
+-- Migrations per Character Creation
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS race VARCHAR(50) DEFAULT 'Human';
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_id TEXT;

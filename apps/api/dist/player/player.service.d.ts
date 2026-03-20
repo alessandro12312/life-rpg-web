@@ -49,6 +49,7 @@ export declare class PlayerService {
         xp_reward?: number;
     }): Promise<any>;
     updateGoalProgress(userId: string, category: string, minutes: number, currentLevel: number, currentXP: number, xpToNext: number): Promise<void>;
+    getActivityHistory(userId: string, limit?: number): Promise<any[]>;
     logActivity(userId: string, payload: {
         category: 'STUDY' | 'WORKOUT' | 'MIXED' | 'CUSTOM';
         custom_name?: string;
@@ -59,5 +60,8 @@ export declare class PlayerService {
     onboardPlayer(userId: string, payload: {
         studyHoursWeekly: number;
         workoutHoursWeekly: number;
+        race: string;
+        className: string;
+        avatarId?: string;
     }): Promise<any>;
 }

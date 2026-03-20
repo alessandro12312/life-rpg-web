@@ -29,10 +29,12 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 10. **API Security & Validation** — NestJS SupabaseAuthGuard in tutto il controller; `class-validator` per validare payload (es. divieto log > 8h); Injection token Bearer nel client
 11. **Health Stat Radar** — Dashboard aggiornata per proiettare la 7° statistica "HLT" su Recharts radar.
 12. **Stat Rebalancing & Endurance Runes** — Aumenti passivi di Endurance (0.03/h) globale e Knowledge (0.05/h) in STUDY. Salute aumenta coi livelli (+0.5). Aggiunte due rune Vitality nel Grimorio. Fixato bug AuthHeader nello sblocco skill.
+13. **Cronologia Attività (The Chronicles)** — Endpoint `GET /player/:id/activities`, UI timeline `/history` accessibile dalla Taverna, per consultare vecchie attività, durata, XP e specifici Stat gains.
+14. **Character Creation (Race & Class)** — Aggiornato `/onboarding` con scelte di Razza (es. Orco) e Classe (es. Barbaro). Applicati bonus alle stats base. Generati artwork Avatar AI e risolto il bug persistenza Zustand al logout.
 
 ### 🔲 Da Implementare
-13. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
-14. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
+15. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
+16. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
 
 ## Workflow Operativo Passo-Passo
 

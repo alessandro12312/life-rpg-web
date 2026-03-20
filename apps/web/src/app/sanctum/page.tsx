@@ -97,7 +97,7 @@ export default function Sanctum() {
             const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${session?.access_token}`
                 },
@@ -242,7 +242,7 @@ export default function Sanctum() {
                                     const { data: { session } } = await supabase.auth.getSession();
                                     const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
                                         method: "POST",
-                                        headers: { 
+                                        headers: {
                                             "Content-Type": "application/json",
                                             "Authorization": `Bearer ${session?.access_token}`
                                         },
@@ -281,7 +281,7 @@ export default function Sanctum() {
                                 className="bg-transparent text-xs font-medium focus:outline-none appearance-none cursor-pointer"
                             >
                                 <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3">Lofi Study</option>
-                                <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-10874.mp3">Ambient Piano</option>
+                                <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-10874.mp3">Workout</option>
                                 <option value="">Nessuna Musica</option>
                             </select>
                         </div>

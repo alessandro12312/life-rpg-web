@@ -1,4 +1,4 @@
-import { IsNumber, Min, Max } from 'class-validator';
+import { IsNumber, Min, Max, IsString, IsOptional } from 'class-validator';
 
 export class OnboardPlayerDto {
     @IsNumber()
@@ -10,4 +10,14 @@ export class OnboardPlayerDto {
     @Min(0)
     @Max(168)
     workoutHoursWeekly: number;
+
+    @IsString()
+    race: string;
+
+    @IsString()
+    className: string;
+
+    @IsString()
+    @IsOptional()
+    avatarId?: string;
 }

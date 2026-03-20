@@ -8,6 +8,7 @@ export declare class PlayerController {
     constructor(playerService: PlayerService);
     getPlayerStats(userId: string): Promise<any>;
     logActivity(userId: string, body: LogActivityDto): Promise<any>;
+    getActivityHistory(userId: string): Promise<any[]>;
     onboardPlayer(userId: string, body: OnboardPlayerDto): Promise<any>;
     getPlayerSkills(userId: string): Promise<{
         unlockedIds: string[];
