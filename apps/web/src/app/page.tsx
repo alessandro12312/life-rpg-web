@@ -27,12 +27,6 @@ export default function TavernDashboard() {
         return;
       }
 
-      const { isOnboarded } = usePlayerStore.getState();
-      if (!isOnboarded) {
-        router.push("/onboarding");
-        return;
-      }
-
       const user = session.user;
       const uname = user.user_metadata?.username || user.email?.split('@')[0] || "Hero";
       setAuth(user.id, uname);
@@ -42,16 +36,38 @@ export default function TavernDashboard() {
         const res = await fetch(`http://localhost:3001/player/${user.id}`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
+        
         if (res.ok) {
           const data = await res.json();
+          
+          // Verify actual DB onboarding status
+          const isDbOnboarded = data.class_name !== 'Novice' || data.xp_current > 0;
+          if (!isDbOnboarded) {
+             router.push("/onboarding");
+             return;
+          }
+          
+          // Sync local state if DB confirms
+          if (!usePlayerStore.getState().isOnboarded) {
+             usePlayerStore.getState().completeOnboarding();
+          }
+
           const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
           initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
           setCharacterClass(data.class_name || "Novice");
           setCharacterRace(data.race || "Umano");
           setAvatarId(data.avatar_id || null);
+        } else {
+          // Player missing in backend, assume new account
+          router.push("/onboarding");
+          return;
         }
       } catch (e) {
         console.error("Engine API unreachable, falling back to local Zustand cache.", e);
+        if (!usePlayerStore.getState().isOnboarded) {
+          router.push("/onboarding");
+          return;
+        }
       } finally {
         setMounted(true);
       }

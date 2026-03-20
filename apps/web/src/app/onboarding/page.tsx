@@ -19,7 +19,8 @@ export default function OnboardingPage() {
         workoutHoursWeekly: 3,
         primaryGoal: "balanced",
         race: "umano",
-        className: "guerriero"
+        className: "guerriero",
+        gender: "m"
     });
 
     const steps = [
@@ -57,6 +58,24 @@ export default function OnboardingPage() {
                         className="w-full h-2 bg-surface-border rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                     <div className="text-2xl font-bold text-center text-primary">{formData.workoutHoursWeekly} Ore</div>
+                </div>
+            )
+        },
+        {
+            title: "Il tuo Aspetto",
+            desc: "Come ti presenti agli Dei?",
+            icon: <User className="w-12 h-12 text-blue-400 mb-4" />,
+            input: (
+                <div className="grid grid-cols-2 gap-4 w-full mt-6">
+                    {[{id: 'm', label: 'Maschile'}, {id: 'f', label: 'Femminile'}].map(g => (
+                        <button
+                            key={g.id}
+                            onClick={() => setFormData({ ...formData, gender: g.id })}
+                            className={`p-4 rounded-xl border transition-all ${formData.gender === g.id ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-surface border-surface-border hover:bg-surface/80'}`}
+                        >
+                            <div className="font-bold text-lg">{g.label}</div>
+                        </button>
+                    ))}
                 </div>
             )
         },
@@ -142,7 +161,8 @@ export default function OnboardingPage() {
                     studyHoursWeekly: formData.studyHoursWeekly,
                     workoutHoursWeekly: formData.workoutHoursWeekly,
                     race: formData.race,
-                    className: formData.className
+                    className: formData.className,
+                    avatarId: `${formData.race}-${formData.className}-${formData.gender}`
                 })
             });
 
