@@ -13,6 +13,7 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const supabase_module_1 = require("./supabase/supabase.module");
 const player_module_1 = require("./player/player.module");
+const sanctum_module_1 = require("./sanctum/sanctum.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -24,6 +25,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             supabase_module_1.SupabaseModule,
             player_module_1.PlayerModule,
+            sanctum_module_1.SanctumModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -146,3 +146,27 @@ ON CONFLICT DO NOTHING;
 -- Migrations per Character Creation
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS race VARCHAR(50) DEFAULT 'Human';
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_id TEXT;
+
+-- 7. Sanctum Lobbies
+CREATE TABLE IF NOT EXISTS public.sanctum_lobbies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    max_participants INT DEFAULT 4,
+    is_private BOOLEAN DEFAULT false,
+    password VARCHAR(255),
+    focus_duration INT DEFAULT 25,
+    break_duration INT DEFAULT 5,
+    host_id UUID REFERENCES public.users(id),
+    status VARCHAR(50) DEFAULT 'WAITING', -- WAITING, FOCUSING, BREAK
+    started_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.sanctum_lobbies ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Enable all for public" ON public.sanctum_lobbies;
+CREATE POLICY "Enable all for public" ON public.sanctum_lobbies FOR ALL USING (true);
+
+-- Enable Realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE public.sanctum_lobbies;
+

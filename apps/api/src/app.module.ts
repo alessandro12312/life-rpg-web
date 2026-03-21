@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SupabaseModule } from './supabase/supabase.module';
 import { PlayerModule } from './player/player.module';
+import { SanctumModule } from './sanctum/sanctum.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PlayerModule } from './player/player.module';
     }),
     SupabaseModule,
     PlayerModule,
+    SanctumModule,
   ],
   controllers: [AppController],
   providers: [AppService],
