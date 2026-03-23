@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, X, Music, CheckCircle, Users, Send, Coffee } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { Button } from "@/components/ui/button";
 
@@ -145,7 +146,7 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
                 const otherMember = membersRef.current.find(m => m.user_id !== userId);
                 if (otherMember) nextHostId = otherMember.user_id;
             }
-            fetch(`http://localhost:3001/sanctum/lobbies/${lobbyRef.current.id}/leave`, {
+            fetch(`${API_URL}/sanctum/lobbies/${lobbyRef.current.id}/leave`, {
                 method: "POST",
                 keepalive: true,
                 headers: {
@@ -191,7 +192,7 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
     const hostStartTimer = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            await fetch(`http://localhost:3001/sanctum/lobbies/${lobby.id}/start`, {
+            await fetch(`${API_URL}/sanctum/lobbies/${lobby.id}/start`, {
                 method: "POST",
                 headers: { 'Authorization': `Bearer ${session?.access_token}` }
             });
@@ -203,7 +204,7 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
     const hostStartBreak = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            await fetch(`http://localhost:3001/sanctum/lobbies/${lobby.id}/break`, {
+            await fetch(`${API_URL}/sanctum/lobbies/${lobby.id}/break`, {
                 method: "POST",
                 headers: { 'Authorization': `Bearer ${session?.access_token}` }
             });
@@ -221,7 +222,7 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
                 const otherMember = members.find(m => m.user_id !== userId);
                 if (otherMember) nextHostId = otherMember.user_id;
             }
-            fetch(`http://localhost:3001/sanctum/lobbies/${lobby.id}/leave`, {
+            fetch(`${API_URL}/sanctum/lobbies/${lobby.id}/leave`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -241,7 +242,7 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
         
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/player/activity`, {
+            const res = await fetch(`${API_URL}/player/activity`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { BookOpen, Swords, Brain, ArrowRight, User, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -151,7 +152,7 @@ export default function OnboardingPage() {
                 currentUserId = session.user.id;
             }
 
-            const res = await fetch(`http://localhost:3001/player/onboard`, {
+            const res = await fetch(`${API_URL}/player/onboard`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

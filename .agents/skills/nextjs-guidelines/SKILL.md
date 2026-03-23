@@ -18,6 +18,7 @@ Il Frontend in `apps/web` si basa sulle nuove funzionalità del React Server Com
 
 ## 3. Data Fetching
 - Su componenti "Client", usa il classico `fetch` nel `useEffect` combinato allo store `usePlayerStore` (Zustand), specialmente per i fetch in polling, o dopo action dell'utente.
+- **URL API centralizzato:** Importa sempre `API_URL` da `@/lib/api` per le chiamate al backend. **MAI** hardcodare `http://localhost:3001` nei componenti. Esempio: `` fetch(`${API_URL}/player/me`, { ... }) ``.
 - Su componenti "Server", usa fetch async diretti nel componente RSC con revalidate, sebbene la comunicazione Life RPG faccia per lo più uso di mutazioni client-side a causa delle interazioni frequenti di Gamification (aggiunta XP, level up animato in tempo reale).
 
 ## 4. Gestione Autenticazione & Stato

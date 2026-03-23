@@ -31,7 +31,7 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 13. **Cronologia Attività (The Chronicles)** — Endpoint `GET /player/:id/activities`, UI timeline `/history` accessibile dalla Taverna, per consultare vecchie attività, durata, XP e specifici Stat gains.
 14. **Character Creation (Race, Class & Aspect)** — Aggiornato `/onboarding` con scelte di Razza (es. Orco), Classe (es. Barbaro) e Aspetto (Maschio/Femmina). Applicati bonus alle stats base. Generati artwork Avatar AI sdoppiati per genere e risolto il bug persistenza Zustand al logout.
 15. **Sanctum Multiplayer Lobbies** — Sistema multiplayer sincronizzato per il Pomodoro (Focus -> Pausa -> Focus) su Supabase Realtime. Timer server-authoritative (`started_at`), calcolo locale degli XP anti-exploit, e UI split responsive.
-16. **Security Hardening** — Eliminato IDOR (tutti gli endpoint Player usano `req.user.id` dal JWT), password lobby hashate con `bcrypt`, RLS legate a `auth.uid()`.
+16. **Security Hardening** — Eliminato IDOR (`req.user.id` dal JWT), password lobby hashate con `bcrypt`, RLS legate a `auth.uid()`. CORS con origin specifico (`CORS_ORIGIN` env), Helmet per security headers, `@nestjs/throttler` rate limiting (20 req/60s), `nextHostId` validato server-side, tutti i `throw new Error()` → `InternalServerErrorException`, URL API centralizzato in `lib/api.ts` (`NEXT_PUBLIC_API_URL`).
 
 ### 🔲 Da Implementare
 17. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
@@ -63,7 +63,7 @@ Se la UI ha bisogno di cache immediata, aggiorna lo store `usePlayerStore.ts`.
 Crea le interfacce orientate all'aspetto RPG.
 - Usa componenti Shadcn (`@/components/ui/...`).
 - Idrata i dati del client tramite `usePlayerStore().userId` o `supabase.auth.getSession()`.
-- Punta all'API locale (`http://localhost:3001/...`) per fetch/mutazioni.
+- **Usa `API_URL`** da `@/lib/api` per tutte le chiamate fetch al backend. **MAI** hardcodare `http://localhost:3001` nei componenti. In produzione basta impostare `NEXT_PUBLIC_API_URL`.
 - **Aesthetic focus:** Gradienti sfumati, glassmorphism (`backdrop-blur-md`), dark mode, animazioni con `framer-motion`.
 
 ## API Endpoints Attivi

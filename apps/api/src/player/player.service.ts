@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
 // ─── Skill Catalog ─────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ export class PlayerService {
             .select('skill_id')
             .eq('user_id', userId);
 
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nel recupero delle skill');
         const unlockedIds = (data ?? []).map((r: { skill_id: string }) => r.skill_id);
         // core_1 is always unlocked
         if (!unlockedIds.includes('core_1')) unlockedIds.unshift('core_1');
@@ -121,7 +121,7 @@ export class PlayerService {
 
         const { error: insertError } = await this.supabase.getClient()
             .from('player_skills').insert({ user_id: userId, skill_id: skillId });
-        if (insertError) throw new Error(insertError.message);
+        if (insertError) throw new InternalServerErrorException('Errore nello sblocco della skill');
 
         return this.getPlayerSkills(userId);
     }
@@ -130,7 +130,7 @@ export class PlayerService {
     async getAchievements(userId: string) {
         const { data, error } = await this.supabase.getClient()
             .from('achievements').select('achievement_id, unlocked_at').eq('user_id', userId);
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nel recupero degli achievement');
         const unlockedIds = (data ?? []).map((r: any) => r.achievement_id);
         return {
             catalog: ACHIEVEMENT_CATALOG,
@@ -202,7 +202,7 @@ export class PlayerService {
     async getGoals(userId: string) {
         const { data, error } = await this.supabase.getClient()
             .from('goals').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nel recupero degli obiettivi');
         return data ?? [];
     }
 
@@ -219,7 +219,7 @@ export class PlayerService {
                 deadline: payload.deadline || null,
                 xp_reward: payload.xp_reward || 200,
             }).select().single();
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nella creazione dell\'obiettivo');
         return data;
     }
 
@@ -267,7 +267,7 @@ export class PlayerService {
             .order('created_at', { ascending: false })
             .limit(limit);
             
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nel recupero della cronologia attività');
         return data ?? [];
     }
 
@@ -361,7 +361,7 @@ export class PlayerService {
             .from('users')
             .update({ xp_current, xp_to_next, level, current_streak, highest_streak, last_login_date: todayStr })
             .eq('id', userId);
-        if (updateError) throw new Error(updateError.message);
+        if (updateError) throw new InternalServerErrorException('Errore nell\'aggiornamento del giocatore');
 
         // Stat update
         let stats_yield: Record<string, number> = {};

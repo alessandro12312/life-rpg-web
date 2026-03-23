@@ -7,10 +7,13 @@ export class SupabaseAuthGuard implements CanActivate {
     private supabase;
 
     constructor(private configService: ConfigService) {
-        // Fallback or env vars
-        const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
-        const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY') || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy_key';
-        
+        const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY') || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            throw new Error('FATAL: SUPABASE_URL e SUPABASE_ANON_KEY devono essere configurate nelle variabili d\'ambiente.');
+        }
+
         this.supabase = createClient(supabaseUrl, supabaseKey);
     }
 

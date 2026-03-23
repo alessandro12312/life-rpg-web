@@ -6,6 +6,7 @@ import { ArrowLeft, BookOpen, Swords, Activity, Clock, Flame } from "lucide-reac
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 interface ActivityLog {
@@ -32,7 +33,7 @@ export default function TheChronicles() {
             setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
 
             try {
-                const res = await fetch(`http://localhost:3001/player/activities`, {
+                const res = await fetch(`${API_URL}/player/activities`, {
                     headers: { 'Authorization': `Bearer ${session.access_token}` }
                 });
                 if (res.ok) {

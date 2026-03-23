@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, Lock, Unlock, Play, Server, Search, ChevronLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -25,7 +26,7 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
     const fetchLobbies = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/sanctum/lobbies`, {
+            const res = await fetch(`${API_URL}/sanctum/lobbies`, {
                 headers: { 'Authorization': `Bearer ${session?.access_token}` }
             });
             if (res.ok) setLobbies(await res.json());
@@ -43,7 +44,7 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
         e.preventDefault();
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/sanctum/lobbies`, {
+            const res = await fetch(`${API_URL}/sanctum/lobbies`, {
                 method: "POST",
                 headers: { 
                     'Authorization': `Bearer ${session?.access_token}`,
@@ -73,7 +74,7 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/sanctum/lobbies/${lobby.id}/join`, {
+            const res = await fetch(`${API_URL}/sanctum/lobbies/${lobby.id}/join`, {
                 method: "POST",
                 headers: { 
                     'Authorization': `Bearer ${session?.access_token}`,
@@ -96,7 +97,7 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
         if (!passwordPromptLobby) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/sanctum/lobbies/${passwordPromptLobby.id}/join`, {
+            const res = await fetch(`${API_URL}/sanctum/lobbies/${passwordPromptLobby.id}/join`, {
                 method: "POST",
                 headers: { 
                     'Authorization': `Bearer ${session?.access_token}`,

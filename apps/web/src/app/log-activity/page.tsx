@@ -8,6 +8,7 @@ import { usePlayerStore } from "@/store/usePlayerStore";
 import { Swords, BookOpen, Activity, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 
 export default function LogActivityPage() {
     const router = useRouter();
@@ -35,7 +36,7 @@ export default function LogActivityPage() {
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/player/activity`, {
+            const res = await fetch(`${API_URL}/player/activity`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

@@ -6,6 +6,7 @@ import { ArrowLeft, BookMarked, Zap, Shield, Brain, X, Activity } from "lucide-r
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 // Skill tree nodes — IDs match the backend SKILL_CATALOG
@@ -56,8 +57,8 @@ export default function TheGrimoire() {
             setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
             try {
                 const [statsRes, skillsRes] = await Promise.all([
-                    fetch(`http://localhost:3001/player/me`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
-                    fetch(`http://localhost:3001/player/skills`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
+                    fetch(`${API_URL}/player/me`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
+                    fetch(`${API_URL}/player/skills`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
                 ]);
                 if (statsRes.ok) {
                     const data = await statsRes.json();
@@ -82,7 +83,7 @@ export default function TheGrimoire() {
         setUnlocking(true);
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/player/skills/unlock`, {
+            const res = await fetch(`${API_URL}/player/skills/unlock`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

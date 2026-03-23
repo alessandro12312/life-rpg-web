@@ -59,7 +59,7 @@ let PlayerService = class PlayerService {
             .select('skill_id')
             .eq('user_id', userId);
         if (error)
-            throw new Error(error.message);
+            throw new common_1.InternalServerErrorException('Errore nel recupero delle skill');
         const unlockedIds = (data ?? []).map((r) => r.skill_id);
         if (!unlockedIds.includes('core_1'))
             unlockedIds.unshift('core_1');
@@ -96,14 +96,14 @@ let PlayerService = class PlayerService {
         const { error: insertError } = await this.supabase.getClient()
             .from('player_skills').insert({ user_id: userId, skill_id: skillId });
         if (insertError)
-            throw new Error(insertError.message);
+            throw new common_1.InternalServerErrorException('Errore nello sblocco della skill');
         return this.getPlayerSkills(userId);
     }
     async getAchievements(userId) {
         const { data, error } = await this.supabase.getClient()
             .from('achievements').select('achievement_id, unlocked_at').eq('user_id', userId);
         if (error)
-            throw new Error(error.message);
+            throw new common_1.InternalServerErrorException('Errore nel recupero degli achievement');
         const unlockedIds = (data ?? []).map((r) => r.achievement_id);
         return {
             catalog: exports.ACHIEVEMENT_CATALOG,
@@ -164,7 +164,7 @@ let PlayerService = class PlayerService {
         const { data, error } = await this.supabase.getClient()
             .from('goals').select('*').eq('user_id', userId).order('created_at', { ascending: false });
         if (error)
-            throw new Error(error.message);
+            throw new common_1.InternalServerErrorException('Errore nel recupero degli obiettivi');
         return data ?? [];
     }
     async createGoal(userId, payload) {
@@ -178,7 +178,7 @@ let PlayerService = class PlayerService {
             xp_reward: payload.xp_reward || 200,
         }).select().single();
         if (error)
-            throw new Error(error.message);
+            throw new common_1.InternalServerErrorException('Errore nella creazione dell\'obiettivo');
         return data;
     }
     async updateGoalProgress(userId, category, minutes, currentLevel, currentXP, xpToNext) {
@@ -220,7 +220,7 @@ let PlayerService = class PlayerService {
             .order('created_at', { ascending: false })
             .limit(limit);
         if (error)
-            throw new Error(error.message);
+            throw new common_1.InternalServerErrorException('Errore nel recupero della cronologia attività');
         return data ?? [];
     }
     async logActivity(userId, payload) {
@@ -294,7 +294,7 @@ let PlayerService = class PlayerService {
             .update({ xp_current, xp_to_next, level, current_streak, highest_streak, last_login_date: todayStr })
             .eq('id', userId);
         if (updateError)
-            throw new Error(updateError.message);
+            throw new common_1.InternalServerErrorException('Errore nell\'aggiornamento del giocatore');
         let stats_yield = {};
         const { data: currentStats, error: statError } = await this.supabase.getClient()
             .from('character_stats').select('*').eq('user_id', userId).single();

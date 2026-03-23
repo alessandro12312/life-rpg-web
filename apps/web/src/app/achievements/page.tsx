@@ -6,6 +6,7 @@ import { Trophy, Target, Plus, ArrowLeft, CheckCircle, Clock, Swords, BookOpen, 
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 
 interface Achievement {
     id: string; name: string; description: string; icon: string;
@@ -38,8 +39,8 @@ export default function AchievementsPage() {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 const [achRes, goalsRes] = await Promise.all([
-                    fetch(`http://localhost:3001/player/achievements`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
-                    fetch(`http://localhost:3001/player/goals`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
+                    fetch(`${API_URL}/player/achievements`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
+                    fetch(`${API_URL}/player/goals`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
                 ]);
                 if (achRes.ok) {
                     const achData = await achRes.json();
@@ -63,7 +64,7 @@ export default function AchievementsPage() {
         if (!userId || !newGoal.title.trim()) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/player/goals`, {
+            const res = await fetch(`${API_URL}/player/goals`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',

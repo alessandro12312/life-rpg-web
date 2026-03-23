@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateLobbyDto } from './dto/create-lobby.dto';
 import * as bcrypt from 'bcrypt';
@@ -29,7 +29,7 @@ export class SanctumService {
             .select()
             .single();
             
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nella creazione della lobby');
         return { ...data, password: null };
     }
 
@@ -40,7 +40,7 @@ export class SanctumService {
             .in('status', ['WAITING', 'FOCUSING'])
             .order('created_at', { ascending: false });
             
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nel recupero delle lobby');
         // Strip out passwords
         return data.map(lobby => ({ ...lobby, password: null }));
     }
@@ -96,7 +96,7 @@ export class SanctumService {
             .select()
             .single();
 
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nell\'avvio del timer');
         return { ...data, password: null };
     }
 
@@ -120,7 +120,7 @@ export class SanctumService {
             .select() // Return the updated data
             .single();
 
-        if (error) throw new Error(error.message);
+        if (error) throw new InternalServerErrorException('Errore nell\'avvio della pausa');
         return { ...data, password: null };
     }
 
@@ -136,6 +136,16 @@ export class SanctumService {
         // Solo l'host deve passare il ruolo o distruggere la stanza
         if (lobby.host_id === userId) {
             if (nextHostId) {
+                // Validazione: verificare che nextHostId sia un utente reale
+                const { data: targetUser } = await this.supabase.getClient()
+                    .from('users')
+                    .select('id')
+                    .eq('id', nextHostId)
+                    .single();
+                if (!targetUser) {
+                    throw new BadRequestException('L\'utente specificato come nuovo host non esiste');
+                }
+
                 await this.supabase.getClient()
                     .from('sanctum_lobbies')
                     .update({ host_id: nextHostId })

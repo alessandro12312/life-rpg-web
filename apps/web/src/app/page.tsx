@@ -7,6 +7,7 @@ import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function TavernDashboard() {
@@ -33,7 +34,7 @@ export default function TavernDashboard() {
 
       // Hydrate with Real Engine Data
       try {
-        const res = await fetch(`http://localhost:3001/player/me`, {
+        const res = await fetch(`${API_URL}/player/me`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         
@@ -103,7 +104,7 @@ export default function TavernDashboard() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`http://localhost:3001/player/activity`, {
+      const res = await fetch(`${API_URL}/player/activity`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
