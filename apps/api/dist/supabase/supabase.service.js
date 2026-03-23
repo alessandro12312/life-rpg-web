@@ -18,7 +18,7 @@ let SupabaseService = class SupabaseService {
     supabase;
     constructor(configService) {
         this.configService = configService;
-        this.supabase = (0, supabase_js_1.createClient)(this.configService.get('SUPABASE_URL'), this.configService.get('SUPABASE_ANON_KEY'));
+        this.supabase = (0, supabase_js_1.createClient)(this.configService.get('SUPABASE_URL'), this.configService.get('SUPABASE_SERVICE_ROLE_KEY'));
     }
     getClient() {
         return this.supabase;

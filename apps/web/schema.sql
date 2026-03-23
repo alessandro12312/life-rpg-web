@@ -182,5 +182,9 @@ CREATE POLICY "Lobbies: host update" ON public.sanctum_lobbies FOR UPDATE USING 
 DROP POLICY IF EXISTS "Lobbies: host delete" ON public.sanctum_lobbies;
 CREATE POLICY "Lobbies: host delete" ON public.sanctum_lobbies FOR DELETE USING (auth.uid() = host_id);
 
--- Enable Realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE public.sanctum_lobbies;
+-- Enable Realtime (idempotent)
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.sanctum_lobbies;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;

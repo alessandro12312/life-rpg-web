@@ -7,7 +7,7 @@ description: Standard architetturale e workflow operativo per implementare nuove
 Questo workflow definisce come tu (Agent) devi progettare e implementare una nuova feature nel progetto monorepo "Life RPG Web". Il progetto converte la produttività reale (studio, allenamento) in progressione RPG.
 
 ## Tech Stack
-- **Database & Auth:** Supabase (PostgreSQL, RLS Policies libere in fase di alpha).
+- **Database & Auth:** Supabase (PostgreSQL, RLS Policies blindate con `auth.uid()`).
 - **Backend API:** NestJS (`apps/api`, porta 3001).
 - **Frontend App:** Next.js 14+ App Router (`apps/web`, porta 3000), Tailwind CSS, framer-motion, lucide-react.
 - **State Management:** Zustand persistente nel LocalStorage (`apps/web/src/store/usePlayerStore.ts`).
@@ -31,10 +31,11 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 13. **Cronologia Attività (The Chronicles)** — Endpoint `GET /player/:id/activities`, UI timeline `/history` accessibile dalla Taverna, per consultare vecchie attività, durata, XP e specifici Stat gains.
 14. **Character Creation (Race, Class & Aspect)** — Aggiornato `/onboarding` con scelte di Razza (es. Orco), Classe (es. Barbaro) e Aspetto (Maschio/Femmina). Applicati bonus alle stats base. Generati artwork Avatar AI sdoppiati per genere e risolto il bug persistenza Zustand al logout.
 15. **Sanctum Multiplayer Lobbies** — Sistema multiplayer sincronizzato per il Pomodoro (Focus -> Pausa -> Focus) su Supabase Realtime. Timer server-authoritative (`started_at`), calcolo locale degli XP anti-exploit, e UI split responsive.
+16. **Security Hardening** — Eliminato IDOR (tutti gli endpoint Player usano `req.user.id` dal JWT), password lobby hashate con `bcrypt`, RLS legate a `auth.uid()`.
 
 ### 🔲 Da Implementare
-16. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
-17. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
+17. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
+18. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
 
 ## Workflow Operativo Passo-Passo
 
@@ -68,17 +69,28 @@ Crea le interfacce orientate all'aspetto RPG.
 ## API Endpoints Attivi
 | Metodo | Endpoint | Descrizione |
 |---|---|---|
-| GET | `/player/:id` | Stats + character_stats del player |
-| POST | `/player/:id/activity` | Log attività → XP, stat, streak, bonus skill |
-| POST | `/player/:id/onboard` | Onboarding iniziale |
-| GET | `/player/:id/skills` | Skill tree: lista skill sbloccate |
-| POST | `/player/:id/skills/unlock` | Sblocca uno skill (body: `{ skillId }`) |
+| GET | `/player/me` | Stats + character_stats del player (userId dal JWT) |
+| POST | `/player/activity` | Log attività → XP, stat, streak, bonus skill |
+| POST | `/player/onboard` | Onboarding iniziale |
+| GET | `/player/skills` | Skill tree: lista skill sbloccate |
+| POST | `/player/skills/unlock` | Sblocca uno skill (body: `{ skillId }`) |
+| GET | `/player/achievements` | Lista achievement sbloccati |
+| GET | `/player/goals` | Lista obiettivi |
+| POST | `/player/goals` | Crea nuovo obiettivo |
+| GET | `/player/activities` | Cronologia attività |
+| GET | `/sanctum/lobbies` | Lista lobby attive |
+| POST | `/sanctum/lobbies` | Crea lobby |
+| POST | `/sanctum/lobbies/:id/join` | Entra in una lobby |
+| POST | `/sanctum/lobbies/:id/start` | Avvia focus |
+| POST | `/sanctum/lobbies/:id/break` | Avvia pausa |
+| POST | `/sanctum/lobbies/:id/leave` | Abbandona lobby |
 
 ## Tabelle DB Principali
 - `users` — progressione (level, xp, streak)
 - `character_stats` — 7 stat del personaggio
 - `activity_logs` — storico attività con XP e stat assegnati
 - `player_skills` — skill tree sbloccate per ogni player (skill_id TEXT)
+- `sanctum_lobbies` — lobby multiplayer (password hashata con bcrypt)
 - `skills` / `user_skills` — legacy MVP seed, non più usati attivamente
 
 ## Gestione Porte in Dev

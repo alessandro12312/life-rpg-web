@@ -25,100 +25,100 @@ let PlayerController = class PlayerController {
     constructor(playerService) {
         this.playerService = playerService;
     }
-    async getPlayerStats(userId) {
-        return this.playerService.getPlayerStats(userId);
+    async getPlayerStats(req) {
+        return this.playerService.getPlayerStats(req.user.id);
     }
-    async logActivity(userId, body) {
-        return this.playerService.logActivity(userId, body);
+    async logActivity(req, body) {
+        return this.playerService.logActivity(req.user.id, body);
     }
-    async getActivityHistory(userId) {
-        return this.playerService.getActivityHistory(userId);
+    async getActivityHistory(req) {
+        return this.playerService.getActivityHistory(req.user.id);
     }
-    async onboardPlayer(userId, body) {
-        return this.playerService.onboardPlayer(userId, body);
+    async onboardPlayer(req, body) {
+        return this.playerService.onboardPlayer(req.user.id, body);
     }
-    async getPlayerSkills(userId) {
-        return this.playerService.getPlayerSkills(userId);
+    async getPlayerSkills(req) {
+        return this.playerService.getPlayerSkills(req.user.id);
     }
-    async unlockSkill(userId, body) {
-        return this.playerService.unlockSkill(userId, body.skillId);
+    async unlockSkill(req, body) {
+        return this.playerService.unlockSkill(req.user.id, body.skillId);
     }
-    async getAchievements(userId) {
-        return this.playerService.getAchievements(userId);
+    async getAchievements(req) {
+        return this.playerService.getAchievements(req.user.id);
     }
-    async getGoals(userId) {
-        return this.playerService.getGoals(userId);
+    async getGoals(req) {
+        return this.playerService.getGoals(req.user.id);
     }
-    async createGoal(userId, body) {
-        return this.playerService.createGoal(userId, body);
+    async createGoal(req, body) {
+        return this.playerService.createGoal(req.user.id, body);
     }
 };
 exports.PlayerController = PlayerController;
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)('me'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "getPlayerStats", null);
 __decorate([
-    (0, common_1.Post)(':id/activity'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)('activity'),
+    __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, log_activity_dto_1.LogActivityDto]),
+    __metadata("design:paramtypes", [Object, log_activity_dto_1.LogActivityDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "logActivity", null);
 __decorate([
-    (0, common_1.Get)(':id/activities'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)('activities'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "getActivityHistory", null);
 __decorate([
-    (0, common_1.Post)(':id/onboard'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)('onboard'),
+    __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, onboard_player_dto_1.OnboardPlayerDto]),
+    __metadata("design:paramtypes", [Object, onboard_player_dto_1.OnboardPlayerDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "onboardPlayer", null);
 __decorate([
-    (0, common_1.Get)(':id/skills'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)('skills'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "getPlayerSkills", null);
 __decorate([
-    (0, common_1.Post)(':id/skills/unlock'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)('skills/unlock'),
+    __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, unlock_skill_dto_1.UnlockSkillDto]),
+    __metadata("design:paramtypes", [Object, unlock_skill_dto_1.UnlockSkillDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "unlockSkill", null);
 __decorate([
-    (0, common_1.Get)(':id/achievements'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)('achievements'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "getAchievements", null);
 __decorate([
-    (0, common_1.Get)(':id/goals'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)('goals'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "getGoals", null);
 __decorate([
-    (0, common_1.Post)(':id/goals'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)('goals'),
+    __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, create_goal_dto_1.CreateGoalDto]),
+    __metadata("design:paramtypes", [Object, create_goal_dto_1.CreateGoalDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "createGoal", null);
 exports.PlayerController = PlayerController = __decorate([
