@@ -241,7 +241,7 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
         
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
+            const res = await fetch(`http://localhost:3001/player/activity`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

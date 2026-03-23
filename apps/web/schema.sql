@@ -105,36 +105,42 @@ CREATE TABLE IF NOT EXISTS public.goals (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Set up Row Level Security (RLS) policies 
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.character_stats ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_skills ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
+-- ═══════════════════════════════════════════════════════════════════════
+-- Row Level Security Policies (Production-Ready)
+-- Ogni utente può leggere/scrivere SOLO le proprie righe.
+-- ═══════════════════════════════════════════════════════════════════════
 
--- Allow public read/write for now to bootstrap MVP (In production, bind to auth.uid())
-DROP POLICY IF EXISTS "Enable all for public" ON public.users;
-CREATE POLICY "Enable all for public" ON public.users FOR ALL USING (true);
+-- Users: un utente può vedere e modificare solo se stesso
+DROP POLICY IF EXISTS "Users: own read" ON public.users;
+CREATE POLICY "Users: own read" ON public.users FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users: own write" ON public.users;
+CREATE POLICY "Users: own write" ON public.users FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users: insert self" ON public.users;
+CREATE POLICY "Users: insert self" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
 
-DROP POLICY IF EXISTS "Enable all for public" ON public.character_stats;
-CREATE POLICY "Enable all for public" ON public.character_stats FOR ALL USING (true);
+-- Character Stats
+DROP POLICY IF EXISTS "Stats: own access" ON public.character_stats;
+CREATE POLICY "Stats: own access" ON public.character_stats FOR ALL USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Enable all for public" ON public.activity_logs;
-CREATE POLICY "Enable all for public" ON public.activity_logs FOR ALL USING (true);
+-- Activity Logs
+DROP POLICY IF EXISTS "Logs: own access" ON public.activity_logs;
+CREATE POLICY "Logs: own access" ON public.activity_logs FOR ALL USING (auth.uid() = user_id);
 
+-- Skills (catalogo leggibile da tutti, insert solo per se stessi)
 DROP POLICY IF EXISTS "Enable all for public" ON public.skills;
-CREATE POLICY "Enable all for public" ON public.skills FOR ALL USING (true);
+CREATE POLICY "Skills: public read" ON public.skills FOR SELECT USING (true);
 
+-- User Skills
 DROP POLICY IF EXISTS "Enable all for public" ON public.user_skills;
-CREATE POLICY "Enable all for public" ON public.user_skills FOR ALL USING (true);
+CREATE POLICY "User Skills: own access" ON public.user_skills FOR ALL USING (auth.uid() = user_id);
 
+-- Achievements
 DROP POLICY IF EXISTS "Enable all for public" ON public.achievements;
-CREATE POLICY "Enable all for public" ON public.achievements FOR ALL USING (true);
+CREATE POLICY "Achievements: own access" ON public.achievements FOR ALL USING (auth.uid() = user_id);
 
+-- Goals
 DROP POLICY IF EXISTS "Enable all for public" ON public.goals;
-CREATE POLICY "Enable all for public" ON public.goals FOR ALL USING (true);
+CREATE POLICY "Goals: own access" ON public.goals FOR ALL USING (auth.uid() = user_id);
 
 -- MVP Seed Skills
 INSERT INTO public.skills (id, name, description, required_level, cost_in_sp, category) 
@@ -165,8 +171,16 @@ CREATE TABLE IF NOT EXISTS public.sanctum_lobbies (
 
 ALTER TABLE public.sanctum_lobbies ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Enable all for public" ON public.sanctum_lobbies;
-CREATE POLICY "Enable all for public" ON public.sanctum_lobbies FOR ALL USING (true);
+-- Le lobby sono leggibili da ogni utente autenticato (per la lista)
+DROP POLICY IF EXISTS "Lobbies: auth read" ON public.sanctum_lobbies;
+CREATE POLICY "Lobbies: auth read" ON public.sanctum_lobbies FOR SELECT USING (auth.uid() IS NOT NULL);
+-- Solo l'host può inserire/modificare/cancellare la propria lobby
+DROP POLICY IF EXISTS "Lobbies: host write" ON public.sanctum_lobbies;
+CREATE POLICY "Lobbies: host write" ON public.sanctum_lobbies FOR INSERT WITH CHECK (auth.uid() = host_id);
+DROP POLICY IF EXISTS "Lobbies: host update" ON public.sanctum_lobbies;
+CREATE POLICY "Lobbies: host update" ON public.sanctum_lobbies FOR UPDATE USING (auth.uid() = host_id);
+DROP POLICY IF EXISTS "Lobbies: host delete" ON public.sanctum_lobbies;
+CREATE POLICY "Lobbies: host delete" ON public.sanctum_lobbies FOR DELETE USING (auth.uid() = host_id);
 
 -- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE public.sanctum_lobbies;
-

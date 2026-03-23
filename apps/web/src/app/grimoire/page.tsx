@@ -56,8 +56,8 @@ export default function TheGrimoire() {
             setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
             try {
                 const [statsRes, skillsRes] = await Promise.all([
-                    fetch(`http://localhost:3001/player/${user.id}`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
-                    fetch(`http://localhost:3001/player/${user.id}/skills`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
+                    fetch(`http://localhost:3001/player/me`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
+                    fetch(`http://localhost:3001/player/skills`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
                 ]);
                 if (statsRes.ok) {
                     const data = await statsRes.json();
@@ -82,7 +82,7 @@ export default function TheGrimoire() {
         setUnlocking(true);
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/player/${userId}/skills/unlock`, {
+            const res = await fetch(`http://localhost:3001/player/skills/unlock`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

@@ -33,7 +33,7 @@ export default function TavernDashboard() {
 
       // Hydrate with Real Engine Data
       try {
-        const res = await fetch(`http://localhost:3001/player/${user.id}`, {
+        const res = await fetch(`http://localhost:3001/player/me`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         
@@ -103,7 +103,7 @@ export default function TavernDashboard() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`http://localhost:3001/player/${userId}/activity`, {
+      const res = await fetch(`http://localhost:3001/player/activity`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

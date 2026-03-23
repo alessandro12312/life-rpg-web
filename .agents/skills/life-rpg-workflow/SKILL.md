@@ -24,17 +24,17 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 6. **Grimoire Skill Tree** (`/grimoire`) — Drag-and-pan interattivo con 7 nodi. SP = `max(0, livello - 5) - spesi`. Bonus passivi in `logActivity`. Tabella: `player_skills`
 7. **Achievement System** (`/achievements` tab Trofei) — 10 badge automatici (`ACHIEVEMENT_CATALOG`): first_blood, level_5, level_10, streak_3/7/30, study_10, workout_10, sanctum_5, skill_1. `checkAchievements()` chiamato in `logActivity`. Tabella: `achievements`
 8. **Goal Tracking** (`/achievements` tab Obiettivi) — Obiettivi personalizzati con target in ore, progress bar, XP bonus al completamento (200 XP default). `updateGoalProgress()` chiamato in `logActivity`. Form creazione nuovi goal. Tabella: `goals`
-
 9. **Sanctum Audio** — Musica ambientale integrata nel timer Pomodoro (Lofi/Ambient) governata da useRef React
 10. **API Security & Validation** — NestJS SupabaseAuthGuard in tutto il controller; `class-validator` per validare payload (es. divieto log > 8h); Injection token Bearer nel client
 11. **Health Stat Radar** — Dashboard aggiornata per proiettare la 7° statistica "HLT" su Recharts radar.
 12. **Stat Rebalancing & Endurance Runes** — Aumenti passivi di Endurance (0.03/h) globale e Knowledge (0.05/h) in STUDY. Salute aumenta coi livelli (+0.5). Aggiunte due rune Vitality nel Grimorio. Fixato bug AuthHeader nello sblocco skill.
 13. **Cronologia Attività (The Chronicles)** — Endpoint `GET /player/:id/activities`, UI timeline `/history` accessibile dalla Taverna, per consultare vecchie attività, durata, XP e specifici Stat gains.
 14. **Character Creation (Race, Class & Aspect)** — Aggiornato `/onboarding` con scelte di Razza (es. Orco), Classe (es. Barbaro) e Aspetto (Maschio/Femmina). Applicati bonus alle stats base. Generati artwork Avatar AI sdoppiati per genere e risolto il bug persistenza Zustand al logout.
+15. **Sanctum Multiplayer Lobbies** — Sistema multiplayer sincronizzato per il Pomodoro (Focus -> Pausa -> Focus) su Supabase Realtime. Timer server-authoritative (`started_at`), calcolo locale degli XP anti-exploit, e UI split responsive.
 
 ### 🔲 Da Implementare
-15. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
-16. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
+16. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
+17. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
 
 ## Workflow Operativo Passo-Passo
 

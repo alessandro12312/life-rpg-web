@@ -32,3 +32,6 @@ Non accettare `payload: any` in un Web controller.
 
 ## 4. Single Responsibility e Prevenzione della Ridondanza (DRY)
 - Quando un'azione genera logiche multipli (Es. Completare il pomodoro timer fa salire XP, check del Daily Quest completato, e aggiornamento Database), incapsula i task dentro sub-metodi privati nel servizio (es `private checkLevelUp(currentXp)`) o importa un service secondario (`QuestEngineService`). Così potrai richiamarlo ovunque e non scriverai codice TS ripetitivo.
+
+## 5. Server-Authoritative State & Synchronization
+Nei sistemi multiplayer soft-realtime (come le Lobby Sanctum), il Backend (NestJS) funge da sorgente di verità per i timer e gli stati condivisi. Salva sempre timestamp (`started_at`, `status`) nel DB anziché affidarti a socket custom. La sincronizzazione si ottiene delegando il broadcast al database (Postgres Changes via Supabase Realtime). Questo azzera i consumi WebSocket lato NestJS e garantisce perfetta parità temporale.

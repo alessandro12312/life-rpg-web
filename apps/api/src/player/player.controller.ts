@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { PlayerService } from './player.service';
 import { LogActivityDto } from './dto/log-activity.dto';
 import { OnboardPlayerDto } from './dto/onboard-player.dto';
@@ -11,57 +11,60 @@ import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 export class PlayerController {
     constructor(private readonly playerService: PlayerService) { }
 
-    @Get(':id')
-    async getPlayerStats(@Param('id') userId: string) {
-        return this.playerService.getPlayerStats(userId);
+    // Il userId viene SEMPRE estratto dal token JWT verificato dalla guard,
+    // mai dal parametro URL. Questo impedisce attacchi IDOR.
+
+    @Get('me')
+    async getPlayerStats(@Req() req: any) {
+        return this.playerService.getPlayerStats(req.user.id);
     }
 
-    @Post(':id/activity')
-    async logActivity(@Param('id') userId: string, @Body() body: LogActivityDto) {
-        return this.playerService.logActivity(userId, body);
+    @Post('activity')
+    async logActivity(@Req() req: any, @Body() body: LogActivityDto) {
+        return this.playerService.logActivity(req.user.id, body);
     }
 
-    @Get(':id/activities')
-    async getActivityHistory(@Param('id') userId: string) {
-        return this.playerService.getActivityHistory(userId);
+    @Get('activities')
+    async getActivityHistory(@Req() req: any) {
+        return this.playerService.getActivityHistory(req.user.id);
     }
 
-    @Post(':id/onboard')
+    @Post('onboard')
     async onboardPlayer(
-        @Param('id') userId: string,
+        @Req() req: any,
         @Body() body: OnboardPlayerDto
     ) {
-        return this.playerService.onboardPlayer(userId, body);
+        return this.playerService.onboardPlayer(req.user.id, body);
     }
 
-    @Get(':id/skills')
-    async getPlayerSkills(@Param('id') userId: string) {
-        return this.playerService.getPlayerSkills(userId);
+    @Get('skills')
+    async getPlayerSkills(@Req() req: any) {
+        return this.playerService.getPlayerSkills(req.user.id);
     }
 
-    @Post(':id/skills/unlock')
+    @Post('skills/unlock')
     async unlockSkill(
-        @Param('id') userId: string,
+        @Req() req: any,
         @Body() body: UnlockSkillDto
     ) {
-        return this.playerService.unlockSkill(userId, body.skillId);
+        return this.playerService.unlockSkill(req.user.id, body.skillId);
     }
 
-    @Get(':id/achievements')
-    async getAchievements(@Param('id') userId: string) {
-        return this.playerService.getAchievements(userId);
+    @Get('achievements')
+    async getAchievements(@Req() req: any) {
+        return this.playerService.getAchievements(req.user.id);
     }
 
-    @Get(':id/goals')
-    async getGoals(@Param('id') userId: string) {
-        return this.playerService.getGoals(userId);
+    @Get('goals')
+    async getGoals(@Req() req: any) {
+        return this.playerService.getGoals(req.user.id);
     }
 
-    @Post(':id/goals')
+    @Post('goals')
     async createGoal(
-        @Param('id') userId: string,
+        @Req() req: any,
         @Body() body: CreateGoalDto
     ) {
-        return this.playerService.createGoal(userId, body);
+        return this.playerService.createGoal(req.user.id, body);
     }
 }

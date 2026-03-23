@@ -23,3 +23,6 @@ Il Frontend in `apps/web` si basa sulle nuove funzionalità del React Server Com
 ## 4. Gestione Autenticazione & Stato
 - **Supabase Session:** Supabase Auth viene agganciata nel layer client (`useEffect` in root page/layout). Esegue i push ai path reindirizzati (`router.push('/login')`) se la `session` non è presente.
 - **Zustand (`usePlayerStore`):** Serve a riflettere istantaneamente lo stato dell'utente RPG persistito lato server, garantendo fluidità senza delay e skeleton loaders per l'UI.
+
+## 5. Supabase Realtime & SPA Cleanup (Anti-Ghosting)
+- Nelle App Router (SPA), la navigazione tra pagine (con `<Link>`) **non scatena** l'evento browser `beforeunload`. Per disconnettersi correttamente dal server (es. uscire da stanze multiplayer e prevenire lobby orfane), unisci un blocco `return` nel `useEffect` del component unmount insieme al `window.addEventListener('beforeunload')` per coprire le chiusure tab. Fai attenzione ad usare reference affidabili e Fetch con `keepalive: true`!

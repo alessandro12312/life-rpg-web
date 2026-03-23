@@ -151,7 +151,7 @@ export default function OnboardingPage() {
                 currentUserId = session.user.id;
             }
 
-            const res = await fetch(`http://localhost:3001/player/${currentUserId}/onboard`, {
+            const res = await fetch(`http://localhost:3001/player/onboard`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

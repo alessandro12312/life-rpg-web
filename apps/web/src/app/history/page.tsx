@@ -32,7 +32,7 @@ export default function TheChronicles() {
             setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
 
             try {
-                const res = await fetch(`http://localhost:3001/player/${user.id}/activities`, {
+                const res = await fetch(`http://localhost:3001/player/activities`, {
                     headers: { 'Authorization': `Bearer ${session.access_token}` }
                 });
                 if (res.ok) {

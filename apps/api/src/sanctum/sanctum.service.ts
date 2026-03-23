@@ -1,12 +1,18 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateLobbyDto } from './dto/create-lobby.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class SanctumService {
     constructor(private readonly supabase: SupabaseService) {}
 
     async createLobby(userId: string, dto: CreateLobbyDto) {
+        let hashedPassword: string | null = null;
+        if (dto.isPrivate && dto.password) {
+            hashedPassword = await bcrypt.hash(dto.password, 10);
+        }
+
         const { data, error } = await this.supabase.getClient()
             .from('sanctum_lobbies')
             .insert([{
@@ -14,7 +20,7 @@ export class SanctumService {
                 category: dto.category,
                 max_participants: dto.maxParticipants,
                 is_private: dto.isPrivate,
-                password: dto.password,
+                password: hashedPassword,
                 focus_duration: dto.focusDuration,
                 break_duration: dto.breakDuration,
                 host_id: userId,
@@ -24,7 +30,7 @@ export class SanctumService {
             .single();
             
         if (error) throw new Error(error.message);
-        return data; 
+        return { ...data, password: null };
     }
 
     async getActiveLobbies() {
@@ -59,8 +65,9 @@ export class SanctumService {
 
         if (error || !lobby) throw new NotFoundException('Lobby non trovata');
         
-        if (lobby.is_private && lobby.password !== password) {
-            throw new UnauthorizedException('Password errata');
+        if (lobby.is_private && lobby.password) {
+            const match = await bcrypt.compare(password || '', lobby.password);
+            if (!match) throw new UnauthorizedException('Password errata');
         }
 
         return { ...lobby, password: null };

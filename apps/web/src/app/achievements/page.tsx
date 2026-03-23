@@ -38,8 +38,8 @@ export default function AchievementsPage() {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 const [achRes, goalsRes] = await Promise.all([
-                    fetch(`http://localhost:3001/player/${userId}/achievements`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
-                    fetch(`http://localhost:3001/player/${userId}/goals`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
+                    fetch(`http://localhost:3001/player/achievements`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
+                    fetch(`http://localhost:3001/player/goals`, { headers: { 'Authorization': `Bearer ${session?.access_token}` } }),
                 ]);
                 if (achRes.ok) {
                     const achData = await achRes.json();
@@ -63,7 +63,7 @@ export default function AchievementsPage() {
         if (!userId || !newGoal.title.trim()) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3001/player/${userId}/goals`, {
+            const res = await fetch(`http://localhost:3001/player/goals`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
