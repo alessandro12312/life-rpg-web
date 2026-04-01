@@ -6,6 +6,8 @@ import { Users, Shield, Crown, Star, LogOut, UserMinus, ArrowUpCircle, Target, C
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 interface GuildMember {
     user_id: string;
@@ -44,9 +46,39 @@ interface GuildDetail {
 }
 
 export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () => void }) {
+    const router = useRouter();
     const [guild, setGuild] = useState<GuildDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<"members" | "quests">("members");
+    const [confirmState, setConfirmState] = useState<{
+        isOpen: boolean;
+        title: string;
+        description: string;
+        confirmText: string;
+        isDestructive: boolean;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: "",
+        description: "",
+        confirmText: "Conferma",
+        isDestructive: false,
+        onConfirm: () => {},
+    });
+
+    const openConfirm = (title: string, description: string, confirmText: string, isDestructive: boolean, onConfirm: () => void) => {
+        setConfirmState({
+            isOpen: true,
+            title,
+            description,
+            confirmText,
+            isDestructive,
+            onConfirm: () => {
+                setConfirmState(s => ({ ...s, isOpen: false }));
+                onConfirm();
+            }
+        });
+    };
 
     const fetchGuild = async () => {
         try {
@@ -74,48 +106,69 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
         return () => { supabase.removeChannel(channel); };
     }, [guildId]);
 
-    const handleLeave = async () => {
-        if (!confirm("Sei sicuro di voler abbandonare la gilda?")) return;
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            await fetch(`${API_URL}/guild/${guildId}/leave`, {
-                method: "POST",
-                headers: { 'Authorization': `Bearer ${session?.access_token}` }
-            });
-            onLeave();
-        } catch { alert("Errore"); }
+    const handleLeave = () => {
+        openConfirm(
+            "Abbandona Gilda",
+            "Sei sicuro di voler abbandonare la gilda? Perderai tutti i progressi nelle quest settimanali.",
+            "Abbandona",
+            true,
+            async () => {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    await fetch(`${API_URL}/guild/${guildId}/leave`, {
+                        method: "POST",
+                        headers: { 'Authorization': `Bearer ${session?.access_token}` }
+                    });
+                    onLeave();
+                } catch { alert("Errore"); }
+            }
+        );
     };
 
-    const handleKick = async (targetUserId: string) => {
-        if (!confirm("Espellere questo membro?")) return;
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            await fetch(`${API_URL}/guild/${guildId}/kick`, {
-                method: "POST",
-                headers: {
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userId: targetUserId })
-            });
-            fetchGuild();
-        } catch { alert("Errore"); }
+    const handleKick = (targetUserId: string) => {
+        openConfirm(
+            "Espelli Membro",
+            "Sei sicuro di voler espellere questo membro dalla gilda?",
+            "Espelli",
+            true,
+            async () => {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    await fetch(`${API_URL}/guild/${guildId}/kick`, {
+                        method: "POST",
+                        headers: {
+                            'Authorization': `Bearer ${session?.access_token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ userId: targetUserId })
+                    });
+                    fetchGuild();
+                } catch { alert("Errore"); }
+            }
+        );
     };
 
-    const handlePromote = async (targetUserId: string) => {
-        if (!confirm("Promuovere a Officer?")) return;
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            await fetch(`${API_URL}/guild/${guildId}/promote`, {
-                method: "POST",
-                headers: {
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userId: targetUserId })
-            });
-            fetchGuild();
-        } catch { alert("Errore"); }
+    const handlePromote = (targetUserId: string) => {
+        openConfirm(
+            "Promuovi Membro",
+            "Vuoi promuovere questo membro a Officer? Potrà gestire ed espellere altri player dalla gilda.",
+            "Promuovi",
+            false,
+            async () => {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    await fetch(`${API_URL}/guild/${guildId}/promote`, {
+                        method: "POST",
+                        headers: {
+                            'Authorization': `Bearer ${session?.access_token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ userId: targetUserId })
+                    });
+                    fetchGuild();
+                } catch { alert("Errore"); }
+            }
+        );
     };
 
     if (loading) {
@@ -157,7 +210,7 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
 
                 <div className="flex items-start justify-between relative z-10">
                     <div className="flex items-center gap-4">
-                        <button onClick={onLeave} className="p-2 rounded-lg hover:bg-surface-border transition-colors">
+                        <button onClick={() => router.push('/')} className="p-2 rounded-lg hover:bg-surface-border transition-colors">
                             <ChevronLeft className="w-5 h-5 text-foreground/60" />
                         </button>
                         <div className="w-16 h-16 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
@@ -341,6 +394,16 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
                     )}
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmState.isOpen}
+                title={confirmState.title}
+                description={confirmState.description}
+                confirmText={confirmState.confirmText}
+                isDestructive={confirmState.isDestructive}
+                onConfirm={confirmState.onConfirm}
+                onCancel={() => setConfirmState(s => ({ ...s, isOpen: false }))}
+            />
         </div>
     );
 }

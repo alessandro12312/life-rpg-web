@@ -27,3 +27,7 @@ Il Frontend in `apps/web` si basa sulle nuove funzionalità del React Server Com
 
 ## 5. Supabase Realtime & SPA Cleanup (Anti-Ghosting)
 - Nelle App Router (SPA), la navigazione tra pagine (con `<Link>`) **non scatena** l'evento browser `beforeunload`. Per disconnettersi correttamente dal server (es. uscire da stanze multiplayer e prevenire lobby orfane), unisci un blocco `return` nel `useEffect` del component unmount insieme al `window.addEventListener('beforeunload')` per coprire le chiusure tab. Fai attenzione ad usare reference affidabili e Fetch con `keepalive: true`!
+
+## 6. Navigazione vs Stato Locale (UI Consistency)
+- **Evita false navigazioni locali:** Non svuotare stati locali (es. `onLeave={() => setMyGuild(null)}`) per simulare un "tasto Indietro" se tale azione espone l'utente a schermate che non dovrebbe vedere (come la ricerca gilde quando l'utente è già in una gilda nel backend).
+- Usa sempre il vero routing (es. `useRouter().push('/')` da `next/navigation`) per uscire da interfacce esclusive. Il rendering condizionale della pagina deve riflettere la Source of Truth del server, prevenendo inconsistenze tra client e backend.
