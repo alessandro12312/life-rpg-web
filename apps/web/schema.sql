@@ -188,3 +188,83 @@ DO $$ BEGIN
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 8. Guild / Party System
+-- ═══════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS public.guilds (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    banner_url TEXT,
+    motto VARCHAR(100),
+    leader_id UUID NOT NULL REFERENCES public.users(id),
+    level INTEGER DEFAULT 1,
+    xp_current BIGINT DEFAULT 0,
+    max_members INTEGER DEFAULT 10,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.guild_members (
+    guild_id UUID REFERENCES public.guilds(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    role VARCHAR(20) DEFAULT 'MEMBER',  -- LEADER, OFFICER, MEMBER
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (guild_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.guild_quests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    guild_id UUID NOT NULL REFERENCES public.guilds(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    category TEXT NOT NULL,           -- STUDY, WORKOUT, MIXED
+    target_minutes INTEGER NOT NULL,  -- obiettivo collettivo in minuti
+    current_minutes INTEGER DEFAULT 0,
+    xp_reward INTEGER DEFAULT 500,
+    week_start DATE NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(guild_id, week_start, category)
+);
+
+-- RLS: guilds
+ALTER TABLE public.guilds ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Guilds: auth read" ON public.guilds;
+CREATE POLICY "Guilds: auth read" ON public.guilds FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Guilds: leader insert" ON public.guilds;
+CREATE POLICY "Guilds: leader insert" ON public.guilds FOR INSERT WITH CHECK (auth.uid() = leader_id);
+DROP POLICY IF EXISTS "Guilds: leader update" ON public.guilds;
+CREATE POLICY "Guilds: leader update" ON public.guilds FOR UPDATE USING (auth.uid() = leader_id);
+DROP POLICY IF EXISTS "Guilds: leader delete" ON public.guilds;
+CREATE POLICY "Guilds: leader delete" ON public.guilds FOR DELETE USING (auth.uid() = leader_id);
+
+-- RLS: guild_members
+ALTER TABLE public.guild_members ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "GuildMembers: auth read" ON public.guild_members;
+CREATE POLICY "GuildMembers: auth read" ON public.guild_members FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "GuildMembers: self insert" ON public.guild_members;
+CREATE POLICY "GuildMembers: self insert" ON public.guild_members FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "GuildMembers: self or leader delete" ON public.guild_members;
+CREATE POLICY "GuildMembers: self or leader delete" ON public.guild_members FOR DELETE USING (
+    auth.uid() = user_id OR
+    auth.uid() IN (SELECT leader_id FROM public.guilds WHERE id = guild_id)
+);
+
+-- RLS: guild_quests (gestite dal backend via Service Role, ma leggibili dai membri)
+ALTER TABLE public.guild_quests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "GuildQuests: auth read" ON public.guild_quests;
+CREATE POLICY "GuildQuests: auth read" ON public.guild_quests FOR SELECT USING (auth.uid() IS NOT NULL);
+
+-- Realtime per guilds e guild_members
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.guilds;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.guild_members;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;

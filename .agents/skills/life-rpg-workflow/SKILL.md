@@ -32,10 +32,11 @@ Questa sezione elenca cosa è già implementato e cosa manca. Aggiornala dopo og
 14. **Character Creation (Race, Class & Aspect)** — Aggiornato `/onboarding` con scelte di Razza (es. Orco), Classe (es. Barbaro) e Aspetto (Maschio/Femmina). Applicati bonus alle stats base. Generati artwork Avatar AI sdoppiati per genere e risolto il bug persistenza Zustand al logout.
 15. **Sanctum Multiplayer Lobbies** — Sistema multiplayer sincronizzato per il Pomodoro (Focus -> Pausa -> Focus) su Supabase Realtime. Timer server-authoritative (`started_at`), calcolo locale degli XP anti-exploit, e UI split responsive.
 16. **Security Hardening** — Eliminato IDOR (`req.user.id` dal JWT), password lobby hashate con `bcrypt`, RLS legate a `auth.uid()`. CORS con origin specifico (`CORS_ORIGIN` env), Helmet per security headers, `@nestjs/throttler` rate limiting (20 req/60s), `nextHostId` validato server-side, tutti i `throw new Error()` → `InternalServerErrorException`, URL API centralizzato in `lib/api.ts` (`NEXT_PUBLIC_API_URL`).
+17. **Guild / Party System** (`/guild`) — Gilde permanenti con ruoli (Leader, Officer, Member). Quest settimanali collettive con progress tracking automatico integrato in `logActivity`. XP e livello gilda. Kick, promote, leave con host migration. Supabase Realtime per aggiornamenti live.
 
 ### 🔲 Da Implementare
-17. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
-18. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
+18. **Library** (`/library`) — (AI) Upload appunti, AI genera quiz/flashcard, rispondere = XP
+19. **AI Coaching** — (AI) Integrazione LLM per suggerimenti e review settimanali
 
 ## Workflow Operativo Passo-Passo
 
@@ -84,6 +85,14 @@ Crea le interfacce orientate all'aspetto RPG.
 | POST | `/sanctum/lobbies/:id/start` | Avvia focus |
 | POST | `/sanctum/lobbies/:id/break` | Avvia pausa |
 | POST | `/sanctum/lobbies/:id/leave` | Abbandona lobby |
+| GET | `/guild` | Lista gilde |
+| POST | `/guild` | Crea gilda |
+| GET | `/guild/me` | La gilda dell'utente corrente |
+| GET | `/guild/:id` | Dettaglio gilda con membri e quest |
+| POST | `/guild/:id/join` | Unisciti a una gilda |
+| POST | `/guild/:id/leave` | Abbandona gilda |
+| POST | `/guild/:id/kick` | Espelli membro (Leader/Officer) |
+| POST | `/guild/:id/promote` | Promuovi a Officer (Leader) |
 
 ## Tabelle DB Principali
 - `users` — progressione (level, xp, streak)
@@ -91,6 +100,9 @@ Crea le interfacce orientate all'aspetto RPG.
 - `activity_logs` — storico attività con XP e stat assegnati
 - `player_skills` — skill tree sbloccate per ogni player (skill_id TEXT)
 - `sanctum_lobbies` — lobby multiplayer (password hashata con bcrypt)
+- `guilds` — gilde permanenti (nome, livello, XP, leader)
+- `guild_members` — relazione N:N utenti-gilde (ruolo: LEADER, OFFICER, MEMBER)
+- `guild_quests` — quest settimanali collettive con progress tracking
 - `skills` / `user_skills` — legacy MVP seed, non più usati attivamente
 
 ## Gestione Porte in Dev

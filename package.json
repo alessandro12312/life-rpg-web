@@ -13,5 +13,8 @@
     "build:api": "npm run build --workspace=apps/api",
     "start:web": "npm run start --workspace=apps/web",
     "start:api": "npm run start --workspace=apps/api"
+  },
+  "overrides": {
+    "ajv": "^8.17.1"
   }
 }

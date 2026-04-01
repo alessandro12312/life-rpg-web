@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut, Trophy, History } from "lucide-react";
+import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut, Trophy, History, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
@@ -291,7 +291,7 @@ export default function TavernDashboard() {
         </section>
 
         {/* Navigation Links */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Link href="/history" className="block w-full">
             <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
               <History className="w-5 h-5 text-amber-500" />
@@ -314,6 +314,12 @@ export default function TavernDashboard() {
             <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" />
               <span className="text-sm font-medium">Trofei</span>
+            </button>
+          </Link>
+          <Link href="/guild" className="block w-full">
+            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
+              <Shield className="w-5 h-5 text-amber-500" />
+              <span className="text-sm font-medium">Gilda</span>
             </button>
           </Link>
         </section>

@@ -1,4 +1,5 @@
 import { SupabaseService } from '../supabase/supabase.service';
+import { GuildService } from '../guild/guild.service';
 export interface SkillDef {
     id: string;
     requires: string[];
@@ -18,7 +19,8 @@ export interface AchievementDef {
 export declare const ACHIEVEMENT_CATALOG: AchievementDef[];
 export declare class PlayerService {
     private readonly supabase;
-    constructor(supabase: SupabaseService);
+    private readonly guildService;
+    constructor(supabase: SupabaseService, guildService: GuildService);
     getPlayerStats(userId: string): Promise<any>;
     getPlayerSkills(userId: string): Promise<{
         unlockedIds: string[];

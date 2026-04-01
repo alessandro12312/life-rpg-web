@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlayerService = exports.ACHIEVEMENT_CATALOG = exports.SKILL_CATALOG = void 0;
 const common_1 = require("@nestjs/common");
 const supabase_service_1 = require("../supabase/supabase.service");
+const guild_service_1 = require("../guild/guild.service");
 exports.SKILL_CATALOG = [
     { id: 'core_1', requires: [], effect: { type: 'xp_multiplier_global', value: 0 } },
     { id: 'int_1', requires: ['core_1'], effect: { type: 'xp_multiplier_category', category: 'STUDY', value: 0.05 } },
@@ -40,8 +41,10 @@ exports.ACHIEVEMENT_CATALOG = [
 ];
 let PlayerService = class PlayerService {
     supabase;
-    constructor(supabase) {
+    guildService;
+    constructor(supabase, guildService) {
         this.supabase = supabase;
+        this.guildService = guildService;
     }
     async getPlayerStats(userId) {
         const { data: user, error } = await this.supabase.getClient()
@@ -346,6 +349,7 @@ let PlayerService = class PlayerService {
             stats_yield,
         });
         await this.updateGoalProgress(userId, payload.category, payload.duration_minutes, level, xp_current, xp_to_next);
+        await this.guildService.updateGuildQuestProgress(userId, payload.category, payload.duration_minutes);
         await this.checkAchievements(userId, {
             level, current_streak, category: payload.category,
             custom_name: payload.custom_name,
@@ -458,6 +462,7 @@ let PlayerService = class PlayerService {
 exports.PlayerService = PlayerService;
 exports.PlayerService = PlayerService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [supabase_service_1.SupabaseService])
+    __metadata("design:paramtypes", [supabase_service_1.SupabaseService,
+        guild_service_1.GuildService])
 ], PlayerService);
 //# sourceMappingURL=player.service.js.map

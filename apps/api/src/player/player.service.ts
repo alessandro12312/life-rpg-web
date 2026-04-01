@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { GuildService } from '../guild/guild.service';
 
 // ─── Skill Catalog ─────────────────────────────────────────────────────────────
 // Mirrors the node IDs used in the frontend SKILLS array
@@ -62,7 +63,10 @@ export const ACHIEVEMENT_CATALOG: AchievementDef[] = [
 // ─── Service ──────────────────────────────────────────────────────────────────
 @Injectable()
 export class PlayerService {
-    constructor(private readonly supabase: SupabaseService) { }
+    constructor(
+        private readonly supabase: SupabaseService,
+        private readonly guildService: GuildService,
+    ) { }
 
     async getPlayerStats(userId: string) {
         const { data: user, error } = await this.supabase.getClient()
@@ -426,6 +430,9 @@ export class PlayerService {
 
         // Update goal progress
         await this.updateGoalProgress(userId, payload.category, payload.duration_minutes, level, xp_current, xp_to_next);
+
+        // Update guild quest progress (if member of a guild)
+        await this.guildService.updateGuildQuestProgress(userId, payload.category, payload.duration_minutes);
 
         // Check achievements
         await this.checkAchievements(userId, {

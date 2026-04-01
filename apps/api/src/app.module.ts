@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { SupabaseModule } from './supabase/supabase.module';
 import { PlayerModule } from './player/player.module';
 import { SanctumModule } from './sanctum/sanctum.module';
+import { GuildModule } from './guild/guild.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { SanctumModule } from './sanctum/sanctum.module';
     SupabaseModule,
     PlayerModule,
     SanctumModule,
+    GuildModule,
   ],
   controllers: [AppController],
   providers: [

@@ -11,6 +11,7 @@ L'API del progetto `apps/api` (su porta 3001) è il motore di verità del gamifi
 Ogni domain deve possedere un modulo Nest separato. Attualmente il progetto ha:
 - **`player`** — progressione (XP, livelli), streak, log attività, onboarding, skill tree, achievements, goals.
 - **`sanctum`** — lobby multiplayer, focus timer sincronizzato, break, leave/host migration.
+- **`guild`** — gilde permanenti, ruoli (Leader/Officer/Member), quest settimanali collettive, XP gilda.
 
 Esempio struttura:
 - `src/player/player.module.ts`: Espone service e importa SupabaseModule.
