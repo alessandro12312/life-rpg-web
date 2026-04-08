@@ -80,11 +80,6 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
                     setIsFinished(false);
                 }
             }, 1000);
-            
-            if (audioRef.current && selectedTrack) {
-                if (lobby.status === 'FOCUSING') audioRef.current.play().catch(() => {});
-                else audioRef.current.pause();
-            }
         } else if (lobby.status === 'WAITING') {
             setTimeLeft(lobby.focus_duration * 60);
             setIsFinished(false);
@@ -93,7 +88,19 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [lobby.status, lobby.started_at, lobby.focus_duration, lobby.break_duration, selectedTrack]);
+    // selectedTrack is intentionally excluded: audio play/pause is handled separately
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lobby.status, lobby.started_at, lobby.focus_duration, lobby.break_duration]);
+
+    // Audio: handled separately so it doesn't restart the timer interval
+    useEffect(() => {
+        if (!audioRef.current || !selectedTrack) return;
+        if (lobby.status === 'FOCUSING') {
+            audioRef.current.play().catch(() => {});
+        } else {
+            audioRef.current.pause();
+        }
+    }, [lobby.status, selectedTrack]);
 
     // Supabase Channels Setup
     useEffect(() => {
@@ -335,7 +342,15 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: any, onLeav
 
             {/* Right: Timer Core */}
             <div className="flex-1 bg-surface/30 border border-surface-border rounded-3xl flex flex-col items-center justify-center relative overflow-hidden">
-                <motion.div animate={{ scale: isActive ? [1, 1.05, 1] : 1, opacity: isActive ? [0.1, 0.2, 0.1] : 0.05 }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 bg-gradient-radial from-accent/20 to-transparent flex items-center justify-center pointer-events-none" />
+                {/* Background glow: rendered with repeat:Infinity ONLY when session is active */}
+                {isActive && (
+                    <motion.div
+                        animate={{ scale: [1, 1.05, 1], opacity: [0.1, 0.2, 0.1] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute inset-0 bg-gradient-radial from-accent/20 to-transparent flex items-center justify-center pointer-events-none"
+                        style={{ willChange: 'transform, opacity' }}
+                    />
+                )}
 
                 <div className="w-full flex justify-between absolute top-4 px-6 z-10">
                     <button onClick={claimXPAndLeave} className="text-foreground/50 hover:text-red-400 transition flex items-center gap-2 group text-sm font-medium">

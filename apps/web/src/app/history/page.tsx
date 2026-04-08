@@ -20,7 +20,7 @@ interface ActivityLog {
 }
 
 export default function TheChronicles() {
-    const { userId, setAuth } = usePlayerStore();
+    const { userId } = usePlayerStore();
     const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -30,7 +30,7 @@ export default function TheChronicles() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) { router.push("/login"); return; }
             const user = session.user;
-            setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
+            usePlayerStore.getState().setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
 
             try {
                 const res = await fetch(`${API_URL}/player/activities`, {
@@ -47,7 +47,8 @@ export default function TheChronicles() {
             }
         };
         init();
-    }, [router, setAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router]);
 
     const getCategoryIcon = (category: string) => {
         switch (category) {

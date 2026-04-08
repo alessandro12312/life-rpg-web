@@ -31,7 +31,7 @@ const SKILLS = [
 ];
 
 export default function TheGrimoire() {
-    const { level, userId, setAuth, initStats } = usePlayerStore();
+    const { level, userId } = usePlayerStore();
     const [activeNode, setActiveNode] = useState<string | null>(null);
     const [unlockedIds, setUnlockedIds] = useState<string[]>(["core_1"]);
     const [unlocking, setUnlocking] = useState(false);
@@ -54,7 +54,7 @@ export default function TheGrimoire() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) { router.push("/login"); return; }
             const user = session.user;
-            setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
+            usePlayerStore.getState().setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
             try {
                 const [statsRes, skillsRes] = await Promise.all([
                     fetch(`${API_URL}/player/me`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
@@ -63,7 +63,7 @@ export default function TheGrimoire() {
                 if (statsRes.ok) {
                     const data = await statsRes.json();
                     const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-                    initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+                    usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
                 }
                 if (skillsRes.ok) {
                     const data = await skillsRes.json();
@@ -76,7 +76,8 @@ export default function TheGrimoire() {
             }
         };
         init();
-    }, [router, setAuth, initStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router]);
 
     const handleUnlock = async (skillId: string) => {
         if (!userId || unlocking) return;

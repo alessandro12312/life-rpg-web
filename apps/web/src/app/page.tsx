@@ -11,13 +11,14 @@ import { API_URL } from "@/lib/api";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level, setAuth, initStats, username, stats, userId, currentStreak, logout } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, username, stats, userId, currentStreak, logout } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
   const [characterClass, setCharacterClass] = useState("Novice");
   const [characterRace, setCharacterRace] = useState("Umano");
   const [avatarId, setAvatarId] = useState<string | null>(null);
   const [completingQuest, setCompletingQuest] = useState<number | null>(null);
   const [completedQuests, setCompletedQuests] = useState<number[]>([]);
+  const [statView, setStatView] = useState<'chart' | 'table'>('chart');
   const router = useRouter();
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function TavernDashboard() {
 
       const user = session.user;
       const uname = user.user_metadata?.username || user.email?.split('@')[0] || "Hero";
-      setAuth(user.id, uname);
+      usePlayerStore.getState().setAuth(user.id, uname);
 
       // Hydrate with Real Engine Data
       try {
@@ -54,7 +55,7 @@ export default function TavernDashboard() {
           }
 
           const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-          initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+          usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
           setCharacterClass(data.class_name || "Novice");
           setCharacterRace(data.race || "Umano");
           setAvatarId(data.avatar_id || null);
@@ -80,7 +81,8 @@ export default function TavernDashboard() {
       if (event === 'SIGNED_OUT') router.push("/login");
     });
     return () => { authListener.subscription.unsubscribe(); };
-  }, [router, setAuth, initStats]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -121,7 +123,7 @@ export default function TavernDashboard() {
       if (res.ok) {
         const data = await res.json();
         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-        initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
         setCompletedQuests(prev => [...prev, questId]);
       }
     } catch (e) {
@@ -214,14 +216,12 @@ export default function TavernDashboard() {
             </div>
 
             <div className="h-5 md:h-3 w-full bg-surface-border rounded-full overflow-hidden shadow-inner relative flex items-center justify-center">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-primary/50 to-primary rounded-full"
+              <div
+                style={{ width: `${progressPercent}%` }}
+                className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-primary/50 to-primary rounded-full transition-[width] duration-[1500ms] ease-out"
               >
                 <div className="absolute top-0 bottom-0 right-0 w-8 bg-gradient-to-l from-white/30 to-transparent blur-sm"></div>
-              </motion.div>
+              </div>
               <div className="absolute z-10 text-[10px] md:hidden font-mono font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] tracking-wider">
                 {mounted ? Math.floor(currentXP) : 0} / {mounted ? Math.floor(xpToNextLevel) : 1000} XP
               </div>
@@ -232,33 +232,97 @@ export default function TavernDashboard() {
         {/* Middle Area: Stats & Quick Actions */}
         <section className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 bg-surface/30 border border-surface-border rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl"></div>
-            <h2 className="text-lg font-semibold mb-4 text-foreground/80 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-accent" />
-              Stat Attributes
-            </h2>
-            <div className="flex items-center justify-center h-64 border border-white/5 rounded-xl bg-surface/20 p-2">
-              {mounted && radarData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                    <PolarGrid stroke="#ffffff20" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff80', fontSize: 11, fontWeight: 600 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, fullMark]} tick={false} axisLine={false} />
-                    <Radar
-                      name="Attributes"
-                      dataKey="A"
-                      stroke="#f59e0b"
-                      fill="#f59e0b"
-                      fillOpacity={0.4}
-                    />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#09090b', borderColor: '#ffffff20', borderRadius: '12px' }}
-                      itemStyle={{ color: '#f59e0b', fontWeight: 'bold' }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="flex justify-between items-center mb-4 relative z-10">
+              <h2 className="text-lg font-semibold text-foreground/80 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-accent" />
+                Stat Attributes
+              </h2>
+              <div className="flex bg-surface/50 border border-surface-border rounded-lg p-1">
+                <button
+                  onClick={() => setStatView('chart')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${statView === 'chart' ? 'bg-primary text-[#09090b] shadow-sm' : 'text-foreground/60 hover:text-foreground hover:bg-white/5'}`}
+                >
+                  Grafico
+                </button>
+                <button
+                  onClick={() => setStatView('table')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${statView === 'table' ? 'bg-primary text-[#09090b] shadow-sm' : 'text-foreground/60 hover:text-foreground hover:bg-white/5'}`}
+                >
+                  Tabella
+                </button>
+              </div>
+            </div>
+            
+            <div className="relative">
+              {statView === 'chart' ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center justify-center h-64 border border-white/5 rounded-xl bg-surface/20 p-2"
+                >
+                  {mounted && radarData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                        <PolarGrid stroke="#ffffff20" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff80', fontSize: 11, fontWeight: 600 }} />
+                        <PolarRadiusAxis angle={30} domain={[0, fullMark]} tick={false} axisLine={false} />
+                        <Radar
+                          name="Attributes"
+                          dataKey="A"
+                          stroke="#f59e0b"
+                          fill="#f59e0b"
+                          fillOpacity={0.4}
+                        />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#09090b', borderColor: '#ffffff20', borderRadius: '12px' }}
+                          itemStyle={{ color: '#f59e0b', fontWeight: 'bold' }}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                </motion.div>
               ) : (
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="border border-white/5 rounded-xl bg-surface/10 overflow-hidden flex flex-col justify-center min-h-[16rem]"
+                >
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-surface/30 text-foreground/60 text-xs uppercase border-b border-white/5">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Statistica</th>
+                        <th className="px-4 py-3 font-semibold text-right">Valore</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {mounted && stats ? (
+                        [
+                          { label: 'Intelligence (INT)', value: stats.intelligence || 0 },
+                          { label: 'Strength (STR)', value: stats.strength || 0 },
+                          { label: 'Endurance (END)', value: stats.endurance || 0 },
+                          { label: 'Discipline (DIS)', value: stats.discipline || 0 },
+                          { label: 'Focus (FOC)', value: stats.focus || 0 },
+                          { label: 'Knowledge (KNO)', value: stats.knowledge || 0 },
+                          { label: 'Health (HLT)', value: stats.health || 0 },
+                        ].map((stat, i) => (
+                          <tr key={i} className="hover:bg-white/5 transition-colors group">
+                            <td className="px-4 py-2 font-medium text-foreground/80 group-hover:text-foreground transition-colors">{stat.label}</td>
+                            <td className="px-4 py-2 font-mono text-primary text-right">{Number(stat.value).toFixed(2)}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={2} className="text-center py-8 text-foreground/50 text-xs">Caricamento...</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </motion.div>
               )}
             </div>
           </div>
