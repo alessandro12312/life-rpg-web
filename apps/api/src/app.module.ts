@@ -8,6 +8,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { PlayerModule } from './player/player.module';
 import { SanctumModule } from './sanctum/sanctum.module';
 import { GuildModule } from './guild/guild.module';
+import { BattleModule } from './battle/battle.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { GuildModule } from './guild/guild.module';
     PlayerModule,
     SanctumModule,
     GuildModule,
+    BattleModule,
   ],
   controllers: [AppController],
   providers: [

@@ -355,7 +355,14 @@ export default function TavernDashboard() {
         </section>
 
         {/* Navigation Links */}
-        <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <Link href="/battle" className="block w-full">
+            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2 relative group overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Swords className="w-5 h-5 text-red-500" />
+              <span className="text-sm font-medium">Arena</span>
+            </button>
+          </Link>
           <Link href="/history" className="block w-full">
             <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
               <History className="w-5 h-5 text-amber-500" />

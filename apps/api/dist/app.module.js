@@ -17,6 +17,7 @@ const supabase_module_1 = require("./supabase/supabase.module");
 const player_module_1 = require("./player/player.module");
 const sanctum_module_1 = require("./sanctum/sanctum.module");
 const guild_module_1 = require("./guild/guild.module");
+const battle_module_1 = require("./battle/battle.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,6 +35,7 @@ exports.AppModule = AppModule = __decorate([
             player_module_1.PlayerModule,
             sanctum_module_1.SanctumModule,
             guild_module_1.GuildModule,
+            battle_module_1.BattleModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

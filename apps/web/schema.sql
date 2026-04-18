@@ -268,3 +268,199 @@ DO $$ BEGIN
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 9. Battle System — Turn-Based Combat
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- 9a. Boss Templates: definizioni dei boss (creati dall'utente o dal sistema)
+CREATE TABLE IF NOT EXISTS public.bosses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    creator_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+
+    -- Identity
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    boss_type VARCHAR(20) DEFAULT 'GOAL',   -- GOAL, TRAINING, RAID
+    tier INTEGER DEFAULT 1,                 -- 1-5, scales with difficulty
+
+    -- Scaling params (server computes HP/ATK/DEF from these)
+    difficulty_factor DECIMAL(5,2) DEFAULT 1.0,
+    phase_count INTEGER DEFAULT 1,          -- Number of phases (1-3)
+
+    -- Computed base stats (set by server at creation time)
+    base_hp INTEGER NOT NULL DEFAULT 500,
+    base_atk INTEGER NOT NULL DEFAULT 30,
+    base_def INTEGER NOT NULL DEFAULT 15,
+
+    -- Rewards
+    xp_reward INTEGER DEFAULT 200,
+    loot_table JSONB DEFAULT '[]',
+
+    -- Relations
+    source_goal_id UUID REFERENCES public.goals(id) ON DELETE SET NULL,
+    is_template BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9b. Battle Instances: a single combat session
+CREATE TABLE IF NOT EXISTS public.battles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    boss_id UUID NOT NULL REFERENCES public.bosses(id) ON DELETE CASCADE,
+
+    -- State
+    status VARCHAR(20) DEFAULT 'WAITING',    -- WAITING, ACTIVE, VICTORY, DEFEAT, ABANDONED
+    mode VARCHAR(20) DEFAULT 'SOLO',         -- SOLO, PARTY, RAID
+    current_phase INTEGER DEFAULT 1,
+    current_turn INTEGER DEFAULT 1,
+
+    -- Live boss stats (for current phase)
+    boss_current_hp INTEGER NOT NULL,
+    boss_max_hp INTEGER NOT NULL,
+    boss_atk INTEGER NOT NULL,
+    boss_def INTEGER NOT NULL,
+
+    -- Turn tracking
+    active_participant_id UUID,
+    turn_deadline TIMESTAMPTZ,
+
+    -- Timestamps
+    started_at TIMESTAMPTZ,
+    ended_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9c. Battle Participants: who is in the battle
+CREATE TABLE IF NOT EXISTS public.battle_participants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    battle_id UUID NOT NULL REFERENCES public.battles(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+
+    -- Combat stats (snapshot at join time, derived from level/class/race/stats)
+    max_hp INTEGER NOT NULL,
+    current_hp INTEGER NOT NULL,
+    atk INTEGER NOT NULL,
+    def INTEGER NOT NULL,
+    spd INTEGER NOT NULL,
+
+    -- Resources
+    mana INTEGER DEFAULT 100,
+    max_mana INTEGER DEFAULT 100,
+
+    -- Status
+    is_defending BOOLEAN DEFAULT false,
+    status_effects JSONB DEFAULT '[]',
+    turn_order INTEGER DEFAULT 0,
+
+    -- Rewards received
+    xp_earned INTEGER DEFAULT 0,
+
+    UNIQUE(battle_id, user_id)
+);
+
+-- 9d. Battle Log: move history for replay and validation
+CREATE TABLE IF NOT EXISTS public.battle_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    battle_id UUID NOT NULL REFERENCES public.battles(id) ON DELETE CASCADE,
+    turn_number INTEGER NOT NULL,
+
+    -- Action
+    actor_type VARCHAR(10) NOT NULL,         -- PLAYER | BOSS
+    actor_id UUID,                           -- user_id if PLAYER, NULL if BOSS
+    action_type VARCHAR(20) NOT NULL,        -- ATTACK, SKILL, DEFEND, ITEM, BOSS_ATTACK
+    skill_id VARCHAR(50),
+    target_type VARCHAR(10),                 -- PLAYER | BOSS
+    target_id UUID,
+
+    -- Result
+    damage_dealt INTEGER DEFAULT 0,
+    damage_blocked INTEGER DEFAULT 0,
+    healing_done INTEGER DEFAULT 0,
+    is_critical BOOLEAN DEFAULT false,
+    is_miss BOOLEAN DEFAULT false,
+
+    -- Narrative
+    narrative TEXT,
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9e. Player Inventory: consumables for battle
+CREATE TABLE IF NOT EXISTS public.player_inventory (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    item_id VARCHAR(50) NOT NULL,
+    quantity INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, item_id)
+);
+
+-- Indexes for battle system
+CREATE INDEX IF NOT EXISTS idx_battles_status ON public.battles (status);
+CREATE INDEX IF NOT EXISTS idx_battle_participants_battle ON public.battle_participants (battle_id);
+CREATE INDEX IF NOT EXISTS idx_battle_participants_user ON public.battle_participants (user_id);
+CREATE INDEX IF NOT EXISTS idx_battle_logs_battle ON public.battle_logs (battle_id, turn_number);
+CREATE INDEX IF NOT EXISTS idx_bosses_creator ON public.bosses (creator_id);
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- RLS: Battle System
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- Bosses: readable by all authenticated users
+ALTER TABLE public.bosses ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Bosses: auth read" ON public.bosses;
+CREATE POLICY "Bosses: auth read" ON public.bosses FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Bosses: creator insert" ON public.bosses;
+CREATE POLICY "Bosses: creator insert" ON public.bosses FOR INSERT WITH CHECK (auth.uid() = creator_id);
+DROP POLICY IF EXISTS "Bosses: creator update" ON public.bosses;
+CREATE POLICY "Bosses: creator update" ON public.bosses FOR UPDATE USING (auth.uid() = creator_id);
+DROP POLICY IF EXISTS "Bosses: creator delete" ON public.bosses;
+CREATE POLICY "Bosses: creator delete" ON public.bosses FOR DELETE USING (auth.uid() = creator_id);
+
+-- Battles: readable by participants, writable by backend (service role)
+ALTER TABLE public.battles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Battles: participant read" ON public.battles;
+CREATE POLICY "Battles: participant read" ON public.battles FOR SELECT USING (
+    auth.uid() IN (SELECT user_id FROM public.battle_participants WHERE battle_id = id)
+);
+DROP POLICY IF EXISTS "Battles: auth insert" ON public.battles;
+CREATE POLICY "Battles: auth insert" ON public.battles FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Battles: auth update" ON public.battles;
+CREATE POLICY "Battles: auth update" ON public.battles FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- Battle Participants: readable by same-battle participants
+ALTER TABLE public.battle_participants ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "BattleParticipants: battle read" ON public.battle_participants;
+CREATE POLICY "BattleParticipants: battle read" ON public.battle_participants FOR SELECT USING (
+    auth.uid() IN (SELECT bp.user_id FROM public.battle_participants bp WHERE bp.battle_id = battle_id)
+);
+DROP POLICY IF EXISTS "BattleParticipants: self insert" ON public.battle_participants;
+CREATE POLICY "BattleParticipants: self insert" ON public.battle_participants FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "BattleParticipants: auth update" ON public.battle_participants;
+CREATE POLICY "BattleParticipants: auth update" ON public.battle_participants FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- Battle Logs: readable by battle participants
+ALTER TABLE public.battle_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "BattleLogs: participant read" ON public.battle_logs;
+CREATE POLICY "BattleLogs: participant read" ON public.battle_logs FOR SELECT USING (
+    auth.uid() IN (SELECT user_id FROM public.battle_participants WHERE battle_id = battle_logs.battle_id)
+);
+DROP POLICY IF EXISTS "BattleLogs: auth insert" ON public.battle_logs;
+CREATE POLICY "BattleLogs: auth insert" ON public.battle_logs FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Player Inventory: full access to own items
+ALTER TABLE public.player_inventory ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Inventory: own access" ON public.player_inventory;
+CREATE POLICY "Inventory: own access" ON public.player_inventory FOR ALL USING (auth.uid() = user_id);
+
+-- Realtime for battles and battle_participants
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.battles;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.battle_participants;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
