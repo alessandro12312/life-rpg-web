@@ -129,3 +129,4 @@ dist
 
 # NestJS
 dist/
+apps/web/package-lock.json
