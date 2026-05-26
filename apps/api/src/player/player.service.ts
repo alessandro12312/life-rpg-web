@@ -1073,7 +1073,7 @@ export class PlayerService {
     const { error: statUpdateError } = await client
       .from('character_stats')
       .update({ [payload.stat]: newVal })
-      .eq('id', userId);
+      .eq('user_id', userId);
 
     if (statUpdateError)
       throw new InternalServerErrorException('Error updating stats');
