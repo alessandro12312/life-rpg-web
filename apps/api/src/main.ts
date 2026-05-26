@@ -9,9 +9,21 @@ async function bootstrap() {
   // Security Headers (X-Frame-Options, CSP, HSTS, ecc.)
   app.use(helmet());
 
-  // CORS: accetta solo l'origin specificato (default: localhost:3000)
+  // CORS: supports a comma-separated list of allowed origins via CORS_ORIGIN env var.
+  // e.g. CORS_ORIGIN=https://my-app.vercel.app,http://localhost:3000
+  const rawOrigins = process.env.CORS_ORIGIN || 'http://localhost:3000';
+  const allowedOrigins = rawOrigins.split(',').map((o) => o.trim());
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. curl, Render health checks)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
     credentials: true,
   });
 
