@@ -16,10 +16,12 @@ import { BattleModule } from './battle/battle.module';
       isGlobal: true,
     }),
     // Rate Limiting: max 20 richieste per IP ogni 60 secondi
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 20,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 20,
+      },
+    ]),
     SupabaseModule,
     PlayerModule,
     SanctumModule,
@@ -33,4 +35,4 @@ import { BattleModule } from './battle/battle.module';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule { }
+export class AppModule {}

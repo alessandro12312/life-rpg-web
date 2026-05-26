@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { SanctumService } from './sanctum.service';
 import { CreateLobbyDto } from './dto/create-lobby.dto';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
@@ -24,7 +32,11 @@ export class SanctumController {
   }
 
   @Post('lobbies/:id/join')
-  async joinLobby(@Req() req: any, @Param('id') id: string, @Body('password') password?: string) {
+  async joinLobby(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body('password') password?: string,
+  ) {
     return this.sanctumService.joinLobby(req.user.id, id, password);
   }
 
@@ -34,7 +46,11 @@ export class SanctumController {
   }
 
   @Post('lobbies/:id/leave')
-  async leaveLobby(@Req() req: any, @Param('id') id: string, @Body('nextHostId') nextHostId?: string) {
+  async leaveLobby(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body('nextHostId') nextHostId?: string,
+  ) {
     return this.sanctumService.leaveLobby(req.user.id, id, nextHostId);
   }
 

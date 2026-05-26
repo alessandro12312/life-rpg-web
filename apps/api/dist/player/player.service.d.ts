@@ -1,5 +1,6 @@
 import { SupabaseService } from '../supabase/supabase.service';
 import { GuildService } from '../guild/guild.service';
+import { BattleService } from '../battle/battle.service';
 export interface SkillDef {
     id: string;
     requires: string[];
@@ -20,7 +21,8 @@ export declare const ACHIEVEMENT_CATALOG: AchievementDef[];
 export declare class PlayerService {
     private readonly supabase;
     private readonly guildService;
-    constructor(supabase: SupabaseService, guildService: GuildService);
+    private readonly battleService;
+    constructor(supabase: SupabaseService, guildService: GuildService, battleService: BattleService);
     getPlayerStats(userId: string): Promise<any>;
     getPlayerSkills(userId: string): Promise<{
         unlockedIds: string[];
@@ -65,5 +67,9 @@ export declare class PlayerService {
         race: string;
         className: string;
         avatarId?: string;
+    }): Promise<any>;
+    allocateStatPoints(userId: string, payload: {
+        stat: 'intelligence' | 'strength' | 'endurance' | 'discipline' | 'focus' | 'knowledge' | 'health';
+        points: number;
     }): Promise<any>;
 }

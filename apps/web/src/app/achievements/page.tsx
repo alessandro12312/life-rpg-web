@@ -7,6 +7,8 @@ import Link from "next/link";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
+import { GlassCard } from "@/components/ui/glass-card";
+import { cn } from "@/lib/utils";
 
 interface Achievement {
     id: string; name: string; description: string; icon: string;
@@ -21,6 +23,17 @@ interface Goal {
     target_minutes: number; current_minutes: number;
     completed: boolean; xp_reward: number; deadline?: string;
 }
+
+const getRarity = (name: string) => {
+    const lowercase = name.toLowerCase();
+    if (lowercase.includes("leggend") || lowercase.includes("lord") || lowercase.includes("master") || lowercase.includes("s-rank") || lowercase.includes("100 ore") || lowercase.includes("oro") || lowercase.includes("gold")) {
+        return "LEGENDARY";
+    }
+    if (lowercase.includes("epic") || lowercase.includes("campione") || lowercase.includes("veterano") || lowercase.includes("focus") || lowercase.includes("50h") || lowercase.includes("perfect") || lowercase.includes("argento") || lowercase.includes("silver")) {
+        return "EPIC";
+    }
+    return "COMMON";
+};
 
 export default function AchievementsPage() {
     const { userId } = usePlayerStore();
@@ -100,28 +113,28 @@ export default function AchievementsPage() {
 
     if (loading) {
         return (
-            <main className="min-h-screen bg-background flex items-center justify-center">
+            <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="animate-pulse text-foreground/50 font-mono">Loading...</div>
-            </main>
+            </div>
         );
     }
 
     return (
-        <main className="min-h-screen bg-background text-foreground p-4 md:p-8">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <Link href="/">
-                        <button className="text-foreground/50 hover:text-foreground transition flex items-center gap-2">
-                            <ArrowLeft className="w-5 h-5" />
-                            <span className="text-sm">Dashboard</span>
-                        </button>
-                    </Link>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        Trofei & Obiettivi
+        <div className="space-y-8">
+            {/* Header / Navigation */}
+            <header className="flex items-center gap-4 pb-2">
+                <Link href="/">
+                    <button className="p-3 bg-surface/80 backdrop-blur border border-surface-border hover:bg-surface rounded-full transition-colors text-foreground">
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                </Link>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-primary drop-shadow-[0_0_10px_rgba(245,158,11,0.5)] flex items-center gap-3">
+                        <Trophy className="w-6 h-6 text-primary opacity-80" /> Trofei & Obiettivi
                     </h1>
-                    <div className="w-20" />
+                    <p className="text-foreground/70 text-sm mt-1">Conquiste e traguardi raggiunti nel tuo viaggio.</p>
                 </div>
+            </header>
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8">
@@ -153,37 +166,117 @@ export default function AchievementsPage() {
                 {tab === 'achievements' && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
                     >
                         {catalog.map((ach, i) => {
                             const isUnlocked = unlockedIds.includes(ach.id);
                             const unlockedDate = unlockedMap[ach.id];
+                            const rarity = getRarity(ach.name);
+                            
+                            const rarityStyle = rarity === 'LEGENDARY'
+                                ? {
+                                    border: 'border-amber-500/30 hover:border-amber-400/60',
+                                    glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_30px_rgba(245,158,11,0.35)]',
+                                    text: 'text-amber-400 font-serif',
+                                    bg: 'bg-gradient-to-b from-amber-500/5 via-[#0c0c14]/95 to-amber-950/15',
+                                    badge: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+                                    label: 'Leggendario',
+                                    light: 'from-amber-400/20 to-transparent'
+                                }
+                                : rarity === 'EPIC'
+                                ? {
+                                    border: 'border-purple-500/30 hover:border-purple-400/60',
+                                    glow: 'shadow-[0_0_15px_rgba(168,85,247,0.15)] hover:shadow-[0_0_30px_rgba(168,85,247,0.35)]',
+                                    text: 'text-purple-400',
+                                    bg: 'bg-gradient-to-b from-purple-500/5 via-[#0c0c14]/95 to-purple-950/15',
+                                    badge: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+                                    label: 'Epico',
+                                    light: 'from-purple-400/20 to-transparent'
+                                }
+                                : {
+                                    border: 'border-blue-500/30 hover:border-blue-400/60',
+                                    glow: 'shadow-[0_0_15px_rgba(59,130,246,0.15)] hover:shadow-[0_0_30px_rgba(59,130,246,0.35)]',
+                                    text: 'text-blue-400',
+                                    bg: 'bg-gradient-to-b from-blue-500/5 via-[#0c0c14]/95 to-blue-950/15',
+                                    badge: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+                                    label: 'Raro',
+                                    light: 'from-blue-400/20 to-transparent'
+                                };
+
                             return (
                                 <motion.div
                                     key={ach.id}
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: i * 0.05 }}
-                                    className={`relative p-4 rounded-2xl border text-center transition-all group ${
+                                    className={`relative p-5 rounded-2xl border text-center transition-all duration-300 group flex flex-col justify-between min-h-[220px] ${
                                         isUnlocked
-                                            ? 'bg-primary/5 border-primary/30 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
-                                            : 'bg-surface/30 border-surface-border opacity-50'
+                                            ? `${rarityStyle.bg} ${rarityStyle.border} ${rarityStyle.glow}`
+                                            : 'bg-zinc-950/40 border-zinc-900/65 opacity-40 hover:opacity-50'
                                     }`}
                                 >
-                                    <div className={`text-3xl mb-2 ${isUnlocked ? '' : 'grayscale'}`}>
-                                        {isUnlocked ? ach.icon : '🔒'}
-                                    </div>
-                                    <p className={`text-xs font-bold ${isUnlocked ? 'text-primary' : 'text-foreground/40'}`}>
-                                        {isUnlocked ? ach.name : '???'}
-                                    </p>
+                                    {/* Glass reflection line */}
+                                    <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
+
+                                    {/* Unlocked background rarity ray of light */}
                                     {isUnlocked && (
-                                        <p className="text-[10px] text-foreground/40 mt-1">{ach.description}</p>
+                                        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-20 h-28 bg-gradient-to-b ${rarityStyle.light} blur-2xl opacity-40 pointer-events-none rounded-full`} />
                                     )}
-                                    {isUnlocked && unlockedDate && (
-                                        <p className="text-[10px] text-foreground/30 mt-1">
-                                            {new Date(unlockedDate).toLocaleDateString('it-IT')}
-                                        </p>
-                                    )}
+
+                                    {/* Trophy / Icon container floating on pedestal */}
+                                    <div className="relative my-4 flex flex-col items-center justify-center flex-1">
+                                        <motion.div
+                                            animate={isUnlocked ? {
+                                                y: [0, -6, 0],
+                                            } : {}}
+                                            transition={{
+                                                duration: 4,
+                                                repeat: Infinity,
+                                                ease: "easeInOut",
+                                                delay: i * 0.15
+                                            }}
+                                            className="text-4xl filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+                                        >
+                                            {isUnlocked ? ach.icon : '🔒'}
+                                        </motion.div>
+                                        
+                                        {/* Physical pedestal base visual */}
+                                        <div className="w-12 h-1 bg-zinc-800 rounded-full mt-2 shadow-[0_1px_2px_rgba(255,255,255,0.05)] border-t border-zinc-700/50" />
+                                    </div>
+
+                                    {/* Rarity and name details */}
+                                    <div className="space-y-1 relative z-10">
+                                        {isUnlocked ? (
+                                            <>
+                                                <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${rarityStyle.badge}`}>
+                                                    {rarityStyle.label}
+                                                </span>
+                                                <h3 className={`text-xs font-black truncate mt-1.5 ${rarityStyle.text}`}>
+                                                    {ach.name}
+                                                </h3>
+                                                <p className="text-[10px] text-foreground/50 line-clamp-2 leading-relaxed">
+                                                    {ach.description}
+                                                </p>
+                                                {unlockedDate && (
+                                                    <p className="text-[9px] text-foreground/30 font-mono mt-1">
+                                                        Ottenuto il {new Date(unlockedDate).toLocaleDateString('it-IT')}
+                                                    </p>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-600 border border-zinc-800">
+                                                    Misterioso
+                                                </span>
+                                                <h3 className="text-xs font-bold text-zinc-500 mt-1.5">
+                                                    ???
+                                                </h3>
+                                                <p className="text-[10px] text-zinc-600 italic">
+                                                    Completa le imprese per sbloccare.
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
                                 </motion.div>
                             );
                         })}
@@ -258,16 +351,18 @@ export default function AchievementsPage() {
                                 const hours = Math.floor(goal.current_minutes / 60);
                                 const targetHours = Math.floor(goal.target_minutes / 60);
                                 return (
-                                    <motion.div
+                                    <GlassCard
                                         key={goal.id}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: i * 0.05 }}
-                                        className={`p-4 rounded-2xl border transition-all ${
-                                            goal.completed
-                                                ? 'bg-emerald-500/5 border-emerald-500/20'
-                                                : 'bg-surface/40 border-surface-border'
-                                        }`}
+                                        glow={goal.completed}
+                                        glowColor="end"
+                                        className={cn(
+                                            "p-4",
+                                            goal.completed && "bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40 shadow-emerald-500/5"
+                                        )}
+                                        hoverEffect={!goal.completed}
                                     >
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-3">
@@ -298,7 +393,7 @@ export default function AchievementsPage() {
                                                 className={`h-full rounded-full ${goal.completed ? 'bg-emerald-400' : 'bg-accent'}`}
                                             />
                                         </div>
-                                    </motion.div>
+                                    </GlassCard>
                                 );
                             })}
                             {goals.length === 0 && (
@@ -310,7 +405,6 @@ export default function AchievementsPage() {
                         </div>
                     </motion.div>
                 )}
-            </div>
-        </main>
+        </div>
     );
 }

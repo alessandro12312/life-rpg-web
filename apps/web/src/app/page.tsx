@@ -1,17 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Swords, BookOpen, Clock, Activity, Flame, LogOut, Trophy, History, Shield } from "lucide-react";
-import Link from "next/link";
+import { User, Swords, BookOpen, Clock, Activity, Flame } from "lucide-react";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { GlassCard } from "@/components/ui/glass-card";
+import { QuickLogger } from "@/components/dashboard/QuickLogger";
+import { BossTracker } from "@/components/dashboard/BossTracker";
+import { BuffsTracker } from "@/components/dashboard/BuffsTracker";
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level, username, stats, userId, currentStreak, logout } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, username, stats, userId, currentStreak, statPoints } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
   const [characterClass, setCharacterClass] = useState("Novice");
   const [characterRace, setCharacterRace] = useState("Umano");
@@ -19,7 +22,19 @@ export default function TavernDashboard() {
   const [completingQuest, setCompletingQuest] = useState<number | null>(null);
   const [completedQuests, setCompletedQuests] = useState<number[]>([]);
   const [statView, setStatView] = useState<'chart' | 'table'>('chart');
+  const [timeStr, setTimeStr] = useState("");
+  const [allocating, setAllocating] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setTimeStr(now.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -55,7 +70,7 @@ export default function TavernDashboard() {
           }
 
           const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-          usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+          usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points);
           setCharacterClass(data.class_name || "Novice");
           setCharacterRace(data.race || "Umano");
           setAvatarId(data.avatar_id || null);
@@ -77,17 +92,41 @@ export default function TavernDashboard() {
 
     checkSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') router.push("/login");
     });
     return () => { authListener.subscription.unsubscribe(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    logout();
-    router.push("/login");
+  const handleAllocateStat = async (statKey: string) => {
+    if (!userId || allocating) return;
+    setAllocating(statKey);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${API_URL}/player/allocate-stats`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          stat: statKey,
+          points: 1
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
+        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points);
+      } else {
+        const err = await res.json();
+        alert(err.message || "Errore durante l'allocazione dei punti");
+      }
+    } catch (e) {
+      console.error("Error allocating stat:", e);
+    } finally {
+      setAllocating(null);
+    }
   };
 
   const handleQuestComplete = async (
@@ -123,7 +162,7 @@ export default function TavernDashboard() {
       if (res.ok) {
         const data = await res.json();
         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points);
         setCompletedQuests(prev => [...prev, questId]);
       }
     } catch (e) {
@@ -164,30 +203,24 @@ export default function TavernDashboard() {
   ] : [];
 
   return (
-    <main className="min-h-screen bg-background text-foreground p-4 lg:p-8 font-sans selection:bg-primary/30">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="space-y-8">
 
-        {/* Header / Player Status */}
-        <section className="bg-surface/50 border border-surface-border p-6 rounded-2xl backdrop-blur-md flex flex-col md:flex-row items-center gap-6 shadow-2xl relative">
-
-          <button
-            onClick={handleLogout}
-            className="absolute top-4 right-4 p-2 rounded-lg bg-surface hover:bg-surface-border text-foreground/50 hover:text-[#ef4444] transition-colors border border-surface-border/50 group"
-            title="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+      {/* Header / Player Status */}
+      <GlassCard glow glowColor="primary" className="p-6 flex flex-col md:flex-row items-center gap-6 shadow-2xl relative" hoverEffect={false}>
 
           <div className="relative group cursor-pointer">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/40 transition duration-500"></div>
             <div className="w-24 h-24 bg-surface-border rounded-full border-2 border-primary/50 flex items-center justify-center relative z-10 overflow-hidden">
               {avatarId ? (
-                <img
-                  src={`/avatars/${avatarId}.png`}
-                  className="w-full h-full object-cover"
-                  alt="Avatar"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; setAvatarId(null); }}
-                />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/avatars/${avatarId}.png`}
+                    className="w-full h-full object-cover"
+                    alt="Avatar"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; setAvatarId(null); }}
+                  />
+                </>
               ) : (
                 <User className="w-10 h-10 text-primary" />
               )}
@@ -227,11 +260,13 @@ export default function TavernDashboard() {
               </div>
             </div>
           </div>
-        </section>
+      </GlassCard>
 
-        {/* Middle Area: Stats & Quick Actions */}
-        <section className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 bg-surface/30 border border-surface-border rounded-2xl p-6 relative overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Stats, Buffs, and Quest Board */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Stat Attributes */}
+          <GlassCard className="p-6 relative overflow-hidden" hoverEffect={false}>
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
             <div className="flex justify-between items-center mb-4 relative z-10">
               <h2 className="text-lg font-semibold text-foreground/80 flex items-center gap-2">
@@ -290,8 +325,17 @@ export default function TavernDashboard() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="border border-white/5 rounded-xl bg-surface/10 overflow-hidden flex flex-col justify-center min-h-[16rem]"
+                  className="border border-white/5 rounded-xl bg-surface/10 overflow-hidden flex flex-col justify-center min-h-[16rem] p-4 space-y-4"
                 >
+                  {mounted && statPoints > 0 && (
+                    <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+                      <span className="text-primary font-extrabold flex items-center gap-1.5 animate-pulse">
+                        ✨ Hai {statPoints} Punti Statistica!
+                      </span>
+                      <span className="text-foreground/50">Clicca sul pulsante "+" per assegnarli.</span>
+                    </div>
+                  )}
+
                   <table className="w-full text-sm text-left">
                     <thead className="bg-surface/30 text-foreground/60 text-xs uppercase border-b border-white/5">
                       <tr>
@@ -302,17 +346,29 @@ export default function TavernDashboard() {
                     <tbody className="divide-y divide-white/5">
                       {mounted && stats ? (
                         [
-                          { label: 'Intelligence (INT)', value: stats.intelligence || 0 },
-                          { label: 'Strength (STR)', value: stats.strength || 0 },
-                          { label: 'Endurance (END)', value: stats.endurance || 0 },
-                          { label: 'Discipline (DIS)', value: stats.discipline || 0 },
-                          { label: 'Focus (FOC)', value: stats.focus || 0 },
-                          { label: 'Knowledge (KNO)', value: stats.knowledge || 0 },
-                          { label: 'Health (HLT)', value: stats.health || 0 },
+                          { key: 'intelligence', label: 'Intelligence (INT)', value: stats.intelligence || 0 },
+                          { key: 'strength', label: 'Strength (STR)', value: stats.strength || 0 },
+                          { key: 'endurance', label: 'Endurance (END)', value: stats.endurance || 0 },
+                          { key: 'discipline', label: 'Discipline (DIS)', value: stats.discipline || 0 },
+                          { key: 'focus', label: 'Focus (FOC)', value: stats.focus || 0 },
+                          { key: 'knowledge', label: 'Knowledge (KNO)', value: stats.knowledge || 0 },
+                          { key: 'health', label: 'Health (HLT)', value: stats.health || 0 },
                         ].map((stat, i) => (
                           <tr key={i} className="hover:bg-white/5 transition-colors group">
                             <td className="px-4 py-2 font-medium text-foreground/80 group-hover:text-foreground transition-colors">{stat.label}</td>
-                            <td className="px-4 py-2 font-mono text-primary text-right">{Number(stat.value).toFixed(2)}</td>
+                            <td className="px-4 py-2 text-right flex items-center justify-end gap-3">
+                              <span className="font-mono text-primary font-bold">{Number(stat.value).toFixed(2)}</span>
+                              {statPoints > 0 && (
+                                <button
+                                  onClick={() => handleAllocateStat(stat.key)}
+                                  disabled={allocating !== null}
+                                  className="px-2 py-0.5 rounded bg-primary text-[#09090b] text-[10px] font-black hover:bg-primary/90 transition-colors active:scale-95 disabled:opacity-50 cursor-pointer"
+                                  title={`Assegna 1 punto a ${stat.label}`}
+                                >
+                                  {allocating === stat.key ? '...' : '+'}
+                                </button>
+                              )}
+                            </td>
                           </tr>
                         ))
                       ) : (
@@ -325,117 +381,127 @@ export default function TavernDashboard() {
                 </motion.div>
               )}
             </div>
-          </div>
+          </GlassCard>
 
-          <div className="space-y-4">
-            <Link href="/sanctum" className="block w-full">
-              <button className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3">
-                <div className="absolute inset-0 bg-gradient-to-tr from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <span className="font-semibold tracking-wide">Enter The Sanctum</span>
-                <span className="text-xs text-foreground/50">Start Focus Session</span>
-              </button>
-            </Link>
+          {/* Buffs and Skills Tracker */}
+          <BuffsTracker characterClass={characterClass} currentStreak={currentStreak} />
 
-            <Link href="/log-activity" className="block w-full">
-              <button
-                className="w-full relative group overflow-hidden bg-surface hover:bg-surface-border transition-colors border border-surface-border p-5 rounded-2xl flex flex-col items-center justify-center gap-3"
+          {/* Quest Board */}
+          <section className="bg-surface/10 border border-surface-border/50 rounded-2xl p-6">
+            <div className="flex justify-between items-end mb-4 px-1">
+              <h2 className="text-lg font-semibold text-foreground/80">Daily Quests</h2>
+              <span className="text-sm text-primary/80 font-mono">Resets in 6h 24m</span>
+            </div>
+
+            <div className="space-y-3">
+              {dailyQuests.map((quest) => {
+                return (
+                  <div
+                    key={quest.id}
+                    onClick={() => handleQuestComplete(quest.id, quest.title, quest.duration, quest.type, quest.category)}
+                    className={`bg-surface/40 hover:bg-surface/60 transition duration-300 border border-surface-border p-4 rounded-xl flex items-center gap-4 relative overflow-hidden group ${completingQuest === quest.id || completedQuests.includes(quest.id) ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
+                  >
+                    <div className={`p-3 rounded-lg flex items-center justify-center ${quest.type === 'int' ? 'bg-[#3b82f6]/10 text-[#3b82f6]' :
+                      quest.type === 'str' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
+                        'bg-[#10b981]/10 text-[#10b981]'
+                      }`}>
+                      {completingQuest === quest.id ? (
+                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        quest.icon
+                      )}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className="font-medium text-foreground transition-colors">{quest.title}</h3>
+                      <p className="text-xs text-foreground/50 mt-1">Reward: +{quest.duration * 10} XP &amp; +{((quest.duration / 60) * 0.1).toFixed(2)} {quest.type.toUpperCase()}</p>
+                    </div>
+                    <div className="text-right min-w-[60px]">
+                      <button className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-lg group-hover:bg-primary group-hover:text-[#09090b] transition-all duration-300 shadow-sm">
+                        {completedQuests.includes(quest.id) ? '✓ DONE' : 'COMPLETE'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column: Interactive Actions, Boss Tracker, Quick Logger */}
+        <div className="space-y-6">
+          {/* Sanctum Portal */}
+          <GlassCard
+            glow
+            glowColor="accent"
+            className="p-6 overflow-hidden relative group cursor-pointer flex flex-col justify-between min-h-[220px]"
+            hoverEffect={true}
+            onClick={() => router.push("/sanctum")}
+          >
+            <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+            
+            {/* Spinning vector rings */}
+            <div className="absolute -right-8 -bottom-8 w-44 h-44 flex items-center justify-center opacity-30 group-hover:opacity-50 transition duration-500">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+                className="absolute w-40 h-40 border border-dashed border-accent rounded-full"
+              />
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+                className="absolute w-32 h-32 border border-dotted border-accent/70 rounded-full"
+              />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                className="absolute w-20 h-20 border border-accent/40 rounded-full flex items-center justify-center"
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#ef4444]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="w-12 h-12 rounded-full bg-[#ef4444]/10 text-[#ef4444] flex items-center justify-center">
-                  <Swords className="w-6 h-6" />
+                <Clock className="w-8 h-8 text-accent animate-pulse" />
+              </motion.div>
+            </div>
+
+            <div className="relative z-10 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-accent bg-accent/10 px-2.5 py-1 rounded-full">
+                    Aether Focus Chamber
+                  </span>
+                  <h3 className="text-xl font-bold tracking-tight mt-2 text-foreground/90 group-hover:text-accent transition duration-300">
+                    Portale del Sanctum
+                  </h3>
                 </div>
-                <span className="font-semibold tracking-wide">Log Activity</span>
-                <span className="text-xs text-foreground/50">Sync Workout or Manual Log</span>
+              </div>
+
+              <div>
+                <p className="text-xs text-foreground/60 max-w-[200px]">
+                  Accedi allo spazio di focalizzazione per canalizzare il mana e sconfiggere i boss in tempo reale.
+                </p>
+              </div>
+            </div>
+
+            <div className="relative z-10 flex justify-between items-center mt-6">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-foreground/40 font-mono uppercase tracking-wider">Aether Time</span>
+                <span className="text-2xl font-mono font-bold text-accent drop-shadow-[0_0_8px_rgba(20,184,166,0.4)]">
+                  {mounted ? timeStr || "00:00:00" : "00:00:00"}
+                </span>
+              </div>
+              
+              <button className="flex items-center gap-1.5 text-xs font-bold text-accent bg-accent/10 hover:bg-accent hover:text-[#09090b] px-4 py-2.5 rounded-lg transition-all duration-300 shadow-lg border border-accent/20 active:scale-95">
+                <span>ENTRA</span>
+                <Swords className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </button>
-            </Link>
-          </div>
-        </section>
+            </div>
+          </GlassCard>
 
-        {/* Navigation Links */}
-        <section className="grid grid-cols-2 md:grid-cols-6 gap-4">
-          <Link href="/battle" className="block w-full">
-            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2 relative group overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Swords className="w-5 h-5 text-red-500" />
-              <span className="text-sm font-medium">Arena</span>
-            </button>
-          </Link>
-          <Link href="/history" className="block w-full">
-            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-              <History className="w-5 h-5 text-amber-500" />
-              <span className="text-sm font-medium">Cronologia</span>
-            </button>
-          </Link>
-          <Link href="/library" className="block w-full">
-            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#3b82f6]" />
-              <span className="text-sm font-medium">Scrittoio</span>
-            </button>
-          </Link>
-          <Link href="/grimoire" className="block w-full">
-            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-              <User className="w-5 h-5 text-purple-400" />
-              <span className="text-sm font-medium">Grimorio</span>
-            </button>
-          </Link>
-          <Link href="/achievements" className="block w-full">
-            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-              <Trophy className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">Trofei</span>
-            </button>
-          </Link>
-          <Link href="/guild" className="block w-full">
-            <button className="w-full bg-surface border border-surface-border hover:bg-surface-border transition p-4 rounded-xl flex flex-col items-center gap-2">
-              <Shield className="w-5 h-5 text-amber-500" />
-              <span className="text-sm font-medium">Gilda</span>
-            </button>
-          </Link>
-        </section>
+          {/* Boss Tracker */}
+          <BossTracker />
 
-        {/* Quest Board */}
-        <section>
-          <div className="flex justify-between items-end mb-4 px-1">
-            <h2 className="text-lg font-semibold text-foreground/80">Daily Quests</h2>
-            <span className="text-sm text-primary/80 font-mono">Resets in 6h 24m</span>
-          </div>
-
-          <div className="space-y-3">
-            {dailyQuests.map((quest) => {
-              return (
-                <div
-                  key={quest.id}
-                  onClick={() => handleQuestComplete(quest.id, quest.title, quest.duration, quest.type, quest.category)}
-                  className={`bg-surface/40 hover:bg-surface/60 transition duration-300 border border-surface-border p-4 rounded-xl flex items-center gap-4 relative overflow-hidden group ${completingQuest === quest.id || completedQuests.includes(quest.id) ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
-                >
-                  <div className={`p-3 rounded-lg flex items-center justify-center ${quest.type === 'int' ? 'bg-[#3b82f6]/10 text-[#3b82f6]' :
-                    quest.type === 'str' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
-                      'bg-[#10b981]/10 text-[#10b981]'
-                    }`}>
-                    {completingQuest === quest.id ? (
-                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      quest.icon
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground transition-colors">{quest.title}</h3>
-                    <p className="text-xs text-foreground/50 mt-1">Reward: +{quest.duration * 10} XP &amp; +{((quest.duration / 60) * 0.1).toFixed(2)} {quest.type.toUpperCase()}</p>
-                  </div>
-                  <div className="text-right min-w-[60px]">
-                    <button className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-lg group-hover:bg-primary group-hover:text-[#09090b] transition-all duration-300 shadow-sm">
-                      {completedQuests.includes(quest.id) ? '✓ DONE' : 'COMPLETE'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
+          {/* Quick Logger */}
+          <QuickLogger />
+        </div>
       </div>
-    </main>
+
+    </div>
   );
 }

@@ -19,6 +19,7 @@ const log_activity_dto_1 = require("./dto/log-activity.dto");
 const onboard_player_dto_1 = require("./dto/onboard-player.dto");
 const unlock_skill_dto_1 = require("./dto/unlock-skill.dto");
 const create_goal_dto_1 = require("./dto/create-goal.dto");
+const allocate_stats_dto_1 = require("./dto/allocate-stats.dto");
 const supabase_auth_guard_1 = require("../auth/supabase-auth.guard");
 let PlayerController = class PlayerController {
     playerService;
@@ -51,6 +52,9 @@ let PlayerController = class PlayerController {
     }
     async createGoal(req, body) {
         return this.playerService.createGoal(req.user.id, body);
+    }
+    async allocateStatPoints(req, body) {
+        return this.playerService.allocateStatPoints(req.user.id, body);
     }
 };
 exports.PlayerController = PlayerController;
@@ -121,6 +125,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, create_goal_dto_1.CreateGoalDto]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "createGoal", null);
+__decorate([
+    (0, common_1.Post)('allocate-stats'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, allocate_stats_dto_1.AllocateStatsDto]),
+    __metadata("design:returntype", Promise)
+], PlayerController.prototype, "allocateStatPoints", null);
 exports.PlayerController = PlayerController = __decorate([
     (0, common_1.Controller)('player'),
     (0, common_1.UseGuards)(supabase_auth_guard_1.SupabaseAuthGuard),

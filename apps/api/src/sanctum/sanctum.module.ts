@@ -6,6 +6,6 @@ import { SupabaseModule } from '../supabase/supabase.module';
 @Module({
   imports: [SupabaseModule],
   providers: [SanctumService],
-  controllers: [SanctumController]
+  controllers: [SanctumController],
 })
 export class SanctumModule {}

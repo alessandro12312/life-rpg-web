@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     
     -- Econ/Streak
     skill_points INTEGER DEFAULT 0,
+    stat_points INTEGER DEFAULT 0,
     current_streak INTEGER DEFAULT 0,
     highest_streak INTEGER DEFAULT 0,
     last_login_date DATE,
@@ -464,3 +465,7 @@ DO $$ BEGIN
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+
+-- Migration to add stat_points to users table for existing databases
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS stat_points INTEGER DEFAULT 0;
+

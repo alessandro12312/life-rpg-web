@@ -8,6 +8,8 @@ import { API_URL } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { GlassCard } from "@/components/ui/glass-card";
+import { cn } from "@/lib/utils";
 
 interface GuildMember {
     user_id: string;
@@ -199,12 +201,15 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto p-4 lg:p-8 space-y-6">
+        <div className="w-full space-y-6">
             {/* Guild Header */}
-            <motion.div
+            <GlassCard
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-surface/50 border border-amber-500/20 rounded-2xl p-6 relative overflow-hidden"
+                glow={true}
+                glowColor="primary"
+                hoverEffect={false}
+                className="p-6 relative border-amber-500/20 overflow-hidden"
             >
                 <div className="absolute -top-20 -right-20 w-60 h-60 bg-amber-500/5 rounded-full blur-3xl" />
 
@@ -258,7 +263,7 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
                         />
                     </div>
                 </div>
-            </motion.div>
+            </GlassCard>
 
             {/* Tabs */}
             <div className="flex gap-2">
@@ -287,11 +292,14 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
                             return (order[a.role as keyof typeof order] ?? 2) - (order[b.role as keyof typeof order] ?? 2);
                         })
                         .map((member) => (
-                            <motion.div
+                            <GlassCard
                                 key={member.user_id}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="bg-surface/40 border border-surface-border rounded-xl p-4 flex items-center justify-between group"
+                                glow={true}
+                                glowColor="primary"
+                                hoverEffect={true}
+                                className="p-4 flex items-center justify-between"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-surface-border flex items-center justify-center overflow-hidden">
@@ -336,7 +344,7 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
                                         </button>
                                     </div>
                                 )}
-                            </motion.div>
+                            </GlassCard>
                         ))}
                 </div>
             )}
@@ -355,11 +363,17 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
                                 : quest.category === 'WORKOUT' ? 'red-400' : 'emerald-400';
 
                             return (
-                                <motion.div
+                                <GlassCard
                                     key={quest.id}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className={`bg-surface/40 border rounded-xl p-4 ${quest.completed ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-surface-border'}`}
+                                    glow={true}
+                                    glowColor={quest.completed ? "end" : "primary"}
+                                    hoverEffect={true}
+                                    className={cn(
+                                        "p-4",
+                                        quest.completed ? 'border-emerald-500/30 bg-emerald-500/5' : ''
+                                    )}
                                 >
                                     <div className="flex items-start justify-between mb-3">
                                         <div>
@@ -388,7 +402,7 @@ export function GuildView({ guildId, onLeave }: { guildId: string; onLeave: () =
                                             />
                                         </div>
                                     </div>
-                                </motion.div>
+                                </GlassCard>
                             );
                         })
                     )}

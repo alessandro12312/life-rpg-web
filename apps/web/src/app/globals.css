@@ -1,23 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Silkscreen&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #09090b; /* Deep Void */
+  /* Abyssal Void Sfondi & Surfaces */
+  --background: #030208; /* Deep Void */
   --foreground: #ededed;
-  
-  /* Surfaces */
-  --surface: #18181b; /* Dark Iron */
-  --surface-border: #27272a;
+  --surface: #0a0914;    /* Obsidian Core */
+  --surface-border: #1a172e;
   
   /* Brand/Accent */
-  --primary: #f59e0b; /* Gold/XP */
-  --accent: #06b6d4; /* Neon Cyan (Mana/Focus) */
+  --primary: #f59e0b; /* Gold/XP (Sunfire Gold) */
+  --accent: #00f0ff;  /* Neon Cyan (Aether Cyan) */
+  --eldritch-purple: #8b5cf6;
+  --eldritch-magenta: #d946ef;
+  --combat-red: #ef4444;
   
   /* Stats */
   --stat-str: #ef4444;
   --stat-int: #3b82f6;
-  --stat-foc: #06b6d4;
+  --stat-foc: #00f0ff;
   --stat-dsc: #8b5cf6;
   --stat-end: #10b981;
+
+  /* Retro Pixel-Art Palette */
+  --retro-bg-classic: #050414;
+  --retro-border-light: #ffffff;
+  --retro-border-dark: #111111;
+  --retro-cyber-cyan: #00f0ff;
+  --retro-neon-magenta: #ff0055;
 }
 
 @theme inline {
@@ -28,11 +38,26 @@
   --color-primary: var(--primary);
   --color-accent: var(--accent);
   
+  --color-eldritch-purple: var(--eldritch-purple);
+  --color-eldritch-magenta: var(--eldritch-magenta);
+  --color-combat-red: var(--combat-red);
+  
   --color-stat-str: var(--stat-str);
   --color-stat-int: var(--stat-int);
   --color-stat-foc: var(--stat-foc);
   --color-stat-dsc: var(--stat-dsc);
   --color-stat-end: var(--stat-end);
+
+  /* Retro Theme Colors */
+  --color-retro-bg: var(--retro-bg-classic);
+  --color-retro-border: var(--retro-border-light);
+  --color-retro-cyan: var(--retro-cyber-cyan);
+  --color-retro-magenta: var(--retro-neon-magenta);
+
+  /* Retro Fonts */
+  --font-press-start: var(--font-press-start-2p);
+  --font-vt323: var(--font-vt323);
+  --font-silkscreen: var(--font-silkscreen);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -44,3 +69,139 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Runic scanlines for high-tier screens */
+.runic-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 32, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg, 
+    rgba(255, 0, 0, 0.06), 
+    rgba(0, 255, 0, 0.02), 
+    rgba(0, 0, 255, 0.06)
+  );
+  background-size: 100% 4px, 6px 100%;
+}
+
+/* Neon glow utilities */
+.svg-glow-cyan {
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6)) drop-shadow(0 0 2px rgba(6, 182, 212, 0.4));
+}
+.svg-glow-gold {
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6)) drop-shadow(0 0 2px rgba(245, 158, 11, 0.4));
+}
+.svg-glow-purple {
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6)) drop-shadow(0 0 2px rgba(139, 92, 246, 0.4));
+}
+
+/* Card 3D Tilt perspective */
+.perspective-card-deck {
+  perspective: 1000px;
+}
+.tilt-card {
+  transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+.tilt-card:hover {
+  transform: rotateY(6deg) rotateX(-4deg) translateZ(10px);
+}
+
+/* --- RETRO PIXEL-ART COMBAT UTILITIES --- */
+
+/* Pixelated Image Rendering (forces crisp pixels, no blur) */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* Classic JRPG Window with double-line borders */
+.retro-window-classic {
+  background-color: var(--retro-bg-classic);
+  border: 4px double var(--retro-border-light);
+  outline: 4px solid var(--retro-border-dark);
+  box-shadow: inset 0 0 0 2px var(--retro-border-dark), 0 10px 25px rgba(0, 0, 0, 0.8);
+  border-radius: 2px;
+}
+
+/* Cyber/Sci-Fi Retro Window with Cyan Accent */
+.retro-window-cyan {
+  background-color: #030a16;
+  border: 4px double var(--retro-cyber-cyan);
+  outline: 4px solid var(--retro-border-dark);
+  box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.15), 0 0 15px rgba(0, 240, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* Neon Boss Wanted Frame */
+.retro-window-magenta {
+  background-color: #0c0208;
+  border: 4px double var(--retro-neon-magenta);
+  outline: 4px solid var(--retro-border-dark);
+  box-shadow: inset 0 0 12px rgba(255, 0, 85, 0.15), 0 0 20px rgba(255, 0, 85, 0.25);
+  border-radius: 2px;
+}
+
+/* CRT Screen simulation (Scanlines, Flicker, Vignette) */
+.crt-screen-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.crt-screen-overlay::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+  background-size: 100% 3px, 3px 100%;
+  z-index: 25;
+  pointer-events: none;
+}
+.crt-screen-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.8) 100%);
+  z-index: 26;
+  pointer-events: none;
+}
+
+/* Retro CRT Phosphor Flicker */
+@keyframes crt-flicker {
+  0% { opacity: 0.985; }
+  50% { opacity: 1; }
+  100% { opacity: 0.99; }
+}
+.crt-flicker-active {
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* Scanline scrolling animation */
+@keyframes scanline-scroll {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.crt-scanline-scroll-effect {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0));
+  animation: scanline-scroll 6s linear infinite;
+  pointer-events: none;
+  z-index: 27;
+}
+
+/* Retro HUD Text Shadows */
+.retro-text-shadow {
+  text-shadow: 2px 2px 0px #000000;
+}
+.retro-text-glow-cyan {
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.8), 2px 2px 0px #000000;
+}
+.retro-text-glow-magenta {
+  text-shadow: 0 0 5px rgba(255, 0, 85, 0.8), 2px 2px 0px #000000;
+}
+
+

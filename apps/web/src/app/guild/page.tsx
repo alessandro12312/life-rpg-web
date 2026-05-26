@@ -36,14 +36,14 @@ export default function GuildPage() {
 
     if (loading) {
         return (
-            <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
+            <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-            </main>
+            </div>
         );
     }
 
     return (
-        <main className="min-h-screen bg-background text-foreground relative overflow-hidden selection:bg-accent/30">
+        <div className="relative overflow-hidden selection:bg-accent/30">
             {myGuild ? (
                 <GuildView
                     guildId={myGuild.id}
@@ -54,6 +54,6 @@ export default function GuildPage() {
                     onJoinGuild={(guild) => setMyGuild(guild)}
                 />
             )}
-        </main>
+        </div>
     );
 }

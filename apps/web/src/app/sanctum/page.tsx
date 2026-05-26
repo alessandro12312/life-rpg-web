@@ -8,7 +8,7 @@ export default function Sanctum() {
     const [activeLobby, setActiveLobby] = useState<any>(null);
 
     return (
-        <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center relative overflow-hidden selection:bg-accent/30">
+        <div className="relative overflow-hidden selection:bg-accent/30 w-full">
             {activeLobby ? (
                 <FocusRoom 
                     initialLobby={activeLobby} 
@@ -20,6 +20,6 @@ export default function Sanctum() {
                     userId={""} // FocusRoom uses usePlayerStore, LobbyHub can use auth session
                 />
             )}
-        </main>
+        </div>
     );
 }

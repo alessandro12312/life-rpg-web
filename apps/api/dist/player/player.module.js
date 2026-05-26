@@ -11,14 +11,15 @@ const common_1 = require("@nestjs/common");
 const player_service_1 = require("./player.service");
 const player_controller_1 = require("./player.controller");
 const guild_module_1 = require("../guild/guild.module");
+const battle_module_1 = require("../battle/battle.module");
 let PlayerModule = class PlayerModule {
 };
 exports.PlayerModule = PlayerModule;
 exports.PlayerModule = PlayerModule = __decorate([
     (0, common_1.Module)({
-        imports: [guild_module_1.GuildModule],
+        imports: [guild_module_1.GuildModule, battle_module_1.BattleModule],
         providers: [player_service_1.PlayerService],
-        controllers: [player_controller_1.PlayerController]
+        controllers: [player_controller_1.PlayerController],
     })
 ], PlayerModule);
 //# sourceMappingURL=player.module.js.map

@@ -13,41 +13,131 @@ exports.PlayerService = exports.ACHIEVEMENT_CATALOG = exports.SKILL_CATALOG = vo
 const common_1 = require("@nestjs/common");
 const supabase_service_1 = require("../supabase/supabase.service");
 const guild_service_1 = require("../guild/guild.service");
+const battle_service_1 = require("../battle/battle.service");
 exports.SKILL_CATALOG = [
-    { id: 'core_1', requires: [], effect: { type: 'xp_multiplier_global', value: 0 } },
-    { id: 'int_1', requires: ['core_1'], effect: { type: 'xp_multiplier_category', category: 'STUDY', value: 0.05 } },
-    { id: 'int_2', requires: ['int_1'], effect: { type: 'stat_gain_multiplier', value: 0.10 } },
-    { id: 'str_1', requires: ['core_1'], effect: { type: 'xp_multiplier_category', category: 'WORKOUT', value: 0.10 } },
-    { id: 'str_2', requires: ['str_1'], effect: { type: 'streak_bonus', value: 0.05 } },
-    { id: 'def_1', requires: ['core_1'], effect: { type: 'xp_multiplier_global', value: 0.05 } },
-    { id: 'def_2', requires: ['def_1'], effect: { type: 'xp_multiplier_global', value: 0.10 } },
-    { id: 'end_1', requires: ['core_1'], effect: { type: 'stat_gain_streak_bonus', value: 0.01 } },
-    { id: 'end_2', requires: ['end_1'], effect: { type: 'stat_gain_streak_bonus', value: 0.02 } },
+    {
+        id: 'core_1',
+        requires: [],
+        effect: { type: 'xp_multiplier_global', value: 0 },
+    },
+    {
+        id: 'int_1',
+        requires: ['core_1'],
+        effect: { type: 'xp_multiplier_category', category: 'STUDY', value: 0.05 },
+    },
+    {
+        id: 'int_2',
+        requires: ['int_1'],
+        effect: { type: 'stat_gain_multiplier', value: 0.1 },
+    },
+    {
+        id: 'str_1',
+        requires: ['core_1'],
+        effect: { type: 'xp_multiplier_category', category: 'WORKOUT', value: 0.1 },
+    },
+    {
+        id: 'str_2',
+        requires: ['str_1'],
+        effect: { type: 'streak_bonus', value: 0.05 },
+    },
+    {
+        id: 'def_1',
+        requires: ['core_1'],
+        effect: { type: 'xp_multiplier_global', value: 0.05 },
+    },
+    {
+        id: 'def_2',
+        requires: ['def_1'],
+        effect: { type: 'xp_multiplier_global', value: 0.1 },
+    },
+    {
+        id: 'end_1',
+        requires: ['core_1'],
+        effect: { type: 'stat_gain_streak_bonus', value: 0.01 },
+    },
+    {
+        id: 'end_2',
+        requires: ['end_1'],
+        effect: { type: 'stat_gain_streak_bonus', value: 0.02 },
+    },
 ];
 function getSkillById(id) {
-    return exports.SKILL_CATALOG.find(s => s.id === id);
+    return exports.SKILL_CATALOG.find((s) => s.id === id);
 }
 exports.ACHIEVEMENT_CATALOG = [
-    { id: 'first_blood', name: 'First Blood', description: 'Completa la tua prima attività', icon: '⚔️' },
-    { id: 'level_5', name: 'Rising Star', description: 'Raggiungi il livello 5', icon: '⭐' },
-    { id: 'level_10', name: 'Veteran', description: 'Raggiungi il livello 10', icon: '🏅' },
-    { id: 'streak_3', name: 'Consistent', description: 'Mantieni una streak di 3 giorni', icon: '🔥' },
-    { id: 'streak_7', name: 'On Fire', description: 'Mantieni una streak di 7 giorni', icon: '💥' },
-    { id: 'streak_30', name: 'Unbreakable', description: 'Mantieni una streak di 30 giorni', icon: '🛡️' },
-    { id: 'study_10', name: 'Scholar', description: 'Completa 10 sessioni di studio', icon: '📚' },
-    { id: 'workout_10', name: 'Warrior', description: 'Completa 10 sessioni di allenamento', icon: '💪' },
-    { id: 'sanctum_5', name: 'Monk', description: 'Completa 5 sessioni nel Sanctum', icon: '🧘' },
-    { id: 'skill_1', name: 'Awakened', description: 'Sblocca la tua prima skill nel Grimoire', icon: '✨' },
+    {
+        id: 'first_blood',
+        name: 'First Blood',
+        description: 'Completa la tua prima attività',
+        icon: '⚔️',
+    },
+    {
+        id: 'level_5',
+        name: 'Rising Star',
+        description: 'Raggiungi il livello 5',
+        icon: '⭐',
+    },
+    {
+        id: 'level_10',
+        name: 'Veteran',
+        description: 'Raggiungi il livello 10',
+        icon: '🏅',
+    },
+    {
+        id: 'streak_3',
+        name: 'Consistent',
+        description: 'Mantieni una streak di 3 giorni',
+        icon: '🔥',
+    },
+    {
+        id: 'streak_7',
+        name: 'On Fire',
+        description: 'Mantieni una streak di 7 giorni',
+        icon: '💥',
+    },
+    {
+        id: 'streak_30',
+        name: 'Unbreakable',
+        description: 'Mantieni una streak di 30 giorni',
+        icon: '🛡️',
+    },
+    {
+        id: 'study_10',
+        name: 'Scholar',
+        description: 'Completa 10 sessioni di studio',
+        icon: '📚',
+    },
+    {
+        id: 'workout_10',
+        name: 'Warrior',
+        description: 'Completa 10 sessioni di allenamento',
+        icon: '💪',
+    },
+    {
+        id: 'sanctum_5',
+        name: 'Monk',
+        description: 'Completa 5 sessioni nel Sanctum',
+        icon: '🧘',
+    },
+    {
+        id: 'skill_1',
+        name: 'Awakened',
+        description: 'Sblocca la tua prima skill nel Grimoire',
+        icon: '✨',
+    },
 ];
 let PlayerService = class PlayerService {
     supabase;
     guildService;
-    constructor(supabase, guildService) {
+    battleService;
+    constructor(supabase, guildService, battleService) {
         this.supabase = supabase;
         this.guildService = guildService;
+        this.battleService = battleService;
     }
     async getPlayerStats(userId) {
-        const { data: user, error } = await this.supabase.getClient()
+        const { data: user, error } = await this.supabase
+            .getClient()
             .from('users')
             .select('*, character_stats(*)')
             .eq('id', userId)
@@ -57,7 +147,8 @@ let PlayerService = class PlayerService {
         return user;
     }
     async getPlayerSkills(userId) {
-        const { data, error } = await this.supabase.getClient()
+        const { data, error } = await this.supabase
+            .getClient()
             .from('player_skills')
             .select('skill_id')
             .eq('user_id', userId);
@@ -74,12 +165,19 @@ let PlayerService = class PlayerService {
             throw new common_1.BadRequestException('Unknown skill');
         if (skillId === 'core_1')
             throw new common_1.BadRequestException('core_1 is always unlocked');
-        const { data: user, error: userError } = await this.supabase.getClient()
-            .from('users').select('level').eq('id', userId).single();
+        const { data: user, error: userError } = await this.supabase
+            .getClient()
+            .from('users')
+            .select('level')
+            .eq('id', userId)
+            .single();
         if (userError || !user)
             throw new common_1.NotFoundException('Player not found');
-        const { data: unlocked } = await this.supabase.getClient()
-            .from('player_skills').select('skill_id').eq('user_id', userId);
+        const { data: unlocked } = await this.supabase
+            .getClient()
+            .from('player_skills')
+            .select('skill_id')
+            .eq('user_id', userId);
         const unlockedIds = (unlocked ?? []).map((r) => r.skill_id);
         if (!unlockedIds.includes('core_1'))
             unlockedIds.push('core_1');
@@ -93,18 +191,23 @@ let PlayerService = class PlayerService {
             }
         }
         const totalSP = Math.max(0, user.level - 5);
-        const spentSP = unlockedIds.filter(id => id !== 'core_1').length;
+        const spentSP = unlockedIds.filter((id) => id !== 'core_1').length;
         if (spentSP >= totalSP)
             throw new common_1.BadRequestException('Not enough Skill Points');
-        const { error: insertError } = await this.supabase.getClient()
-            .from('player_skills').insert({ user_id: userId, skill_id: skillId });
+        const { error: insertError } = await this.supabase
+            .getClient()
+            .from('player_skills')
+            .insert({ user_id: userId, skill_id: skillId });
         if (insertError)
             throw new common_1.InternalServerErrorException('Errore nello sblocco della skill');
         return this.getPlayerSkills(userId);
     }
     async getAchievements(userId) {
-        const { data, error } = await this.supabase.getClient()
-            .from('achievements').select('achievement_id, unlocked_at').eq('user_id', userId);
+        const { data, error } = await this.supabase
+            .getClient()
+            .from('achievements')
+            .select('achievement_id, unlocked_at')
+            .eq('user_id', userId);
         if (error)
             throw new common_1.InternalServerErrorException('Errore nel recupero degli achievement');
         const unlockedIds = (data ?? []).map((r) => r.achievement_id);
@@ -115,8 +218,11 @@ let PlayerService = class PlayerService {
         };
     }
     async checkAchievements(userId, ctx) {
-        const { data: existing } = await this.supabase.getClient()
-            .from('achievements').select('achievement_id').eq('user_id', userId);
+        const { data: existing } = await this.supabase
+            .getClient()
+            .from('achievements')
+            .select('achievement_id')
+            .eq('user_id', userId);
         const has = new Set((existing ?? []).map((r) => r.achievement_id));
         const newAchievements = [];
         const tryUnlock = (id) => {
@@ -125,23 +231,35 @@ let PlayerService = class PlayerService {
                 has.add(id);
             }
         };
-        const { count: totalActivities } = await this.supabase.getClient()
-            .from('activity_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+        const { count: totalActivities } = await this.supabase
+            .getClient()
+            .from('activity_logs')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId);
         if ((totalActivities ?? 0) >= 1)
             tryUnlock('first_blood');
-        const { count: studyCount } = await this.supabase.getClient()
-            .from('activity_logs').select('id', { count: 'exact', head: true })
-            .eq('user_id', userId).eq('category', 'STUDY');
+        const { count: studyCount } = await this.supabase
+            .getClient()
+            .from('activity_logs')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('category', 'STUDY');
         if ((studyCount ?? 0) >= 10)
             tryUnlock('study_10');
-        const { count: workoutCount } = await this.supabase.getClient()
-            .from('activity_logs').select('id', { count: 'exact', head: true })
-            .eq('user_id', userId).eq('category', 'WORKOUT');
+        const { count: workoutCount } = await this.supabase
+            .getClient()
+            .from('activity_logs')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('category', 'WORKOUT');
         if ((workoutCount ?? 0) >= 10)
             tryUnlock('workout_10');
-        const { count: sanctumCount } = await this.supabase.getClient()
-            .from('activity_logs').select('id', { count: 'exact', head: true })
-            .eq('user_id', userId).eq('custom_name', 'Sanctum Deep Focus');
+        const { count: sanctumCount } = await this.supabase
+            .getClient()
+            .from('activity_logs')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('custom_name', 'Sanctum Deep Focus');
         if ((sanctumCount ?? 0) >= 5)
             tryUnlock('sanctum_5');
         if (ctx.level >= 5)
@@ -154,69 +272,174 @@ let PlayerService = class PlayerService {
             tryUnlock('streak_7');
         if (ctx.current_streak >= 30)
             tryUnlock('streak_30');
-        const { data: skills } = await this.supabase.getClient()
-            .from('player_skills').select('skill_id').eq('user_id', userId);
+        const { data: skills } = await this.supabase
+            .getClient()
+            .from('player_skills')
+            .select('skill_id')
+            .eq('user_id', userId);
         if ((skills ?? []).length >= 1)
             tryUnlock('skill_1');
         if (newAchievements.length > 0) {
-            await this.supabase.getClient().from('achievements').insert(newAchievements.map(aid => ({ user_id: userId, achievement_id: aid })));
+            await this.supabase
+                .getClient()
+                .from('achievements')
+                .insert(newAchievements.map((aid) => ({
+                user_id: userId,
+                achievement_id: aid,
+            })));
         }
         return newAchievements;
     }
     async getGoals(userId) {
-        const { data, error } = await this.supabase.getClient()
-            .from('goals').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+        const { data, error } = await this.supabase
+            .getClient()
+            .from('goals')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
         if (error)
             throw new common_1.InternalServerErrorException('Errore nel recupero degli obiettivi');
         return data ?? [];
     }
     async createGoal(userId, payload) {
-        const { data, error } = await this.supabase.getClient()
-            .from('goals').insert({
+        const { data, error } = await this.supabase
+            .getClient()
+            .from('goals')
+            .insert({
             user_id: userId,
             title: payload.title,
             category: payload.category,
             target_minutes: payload.target_minutes,
             deadline: payload.deadline || null,
             xp_reward: payload.xp_reward || 200,
-        }).select().single();
+        })
+            .select()
+            .single();
         if (error)
-            throw new common_1.InternalServerErrorException('Errore nella creazione dell\'obiettivo');
+            throw new common_1.InternalServerErrorException("Errore nella creazione dell'obiettivo");
         return data;
     }
     async updateGoalProgress(userId, category, minutes, currentLevel, currentXP, xpToNext) {
-        const { data: goals } = await this.supabase.getClient()
-            .from('goals').select('*')
-            .eq('user_id', userId).eq('completed', false)
+        const { data: goals } = await this.supabase
+            .getClient()
+            .from('goals')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('completed', false)
             .in('category', [category, 'MIXED']);
         if (!goals || goals.length === 0)
             return;
+        const { data: userBattles } = await this.supabase
+            .getClient()
+            .from('battle_participants')
+            .select('battle_id')
+            .eq('user_id', userId);
+        const battleIds = (userBattles || []).map((b) => b.battle_id);
+        let primaryStat = 1.0;
+        if (battleIds.length > 0) {
+            const { data: charStats } = await this.supabase
+                .getClient()
+                .from('character_stats')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+            if (charStats) {
+                if (category === 'STUDY') {
+                    primaryStat = Number(charStats.intelligence) || 1.0;
+                }
+                else if (category === 'WORKOUT') {
+                    primaryStat = Number(charStats.strength) || 1.0;
+                }
+                else {
+                    primaryStat = Number(charStats.focus) || 1.0;
+                }
+            }
+        }
         let bonusXP = 0;
         for (const goal of goals) {
             const newMinutes = Math.min(goal.current_minutes + minutes, goal.target_minutes);
             const completed = newMinutes >= goal.target_minutes;
-            await this.supabase.getClient()
-                .from('goals').update({ current_minutes: newMinutes, completed })
+            await this.supabase
+                .getClient()
+                .from('goals')
+                .update({ current_minutes: newMinutes, completed })
                 .eq('id', goal.id);
             if (completed)
-                bonusXP += (goal.xp_reward || 200);
+                bonusXP += goal.xp_reward || 200;
+            if (battleIds.length > 0) {
+                const { data: battles } = await this.supabase
+                    .getClient()
+                    .from('battles')
+                    .select('*, bosses!inner(id, name, source_goal_id)')
+                    .in('id', battleIds)
+                    .eq('status', 'ACTIVE')
+                    .eq('bosses.source_goal_id', goal.id);
+                for (const battle of battles || []) {
+                    const damage = Math.max(1, Math.floor(minutes * primaryStat * 0.5));
+                    const newHp = Math.max(0, battle.boss_current_hp - damage);
+                    const isDefeated = newHp === 0;
+                    const updatePayload = { boss_current_hp: newHp };
+                    if (isDefeated) {
+                        updatePayload.status = 'VICTORY';
+                        updatePayload.ended_at = new Date().toISOString();
+                    }
+                    await this.supabase
+                        .getClient()
+                        .from('battles')
+                        .update(updatePayload)
+                        .eq('id', battle.id);
+                    await this.supabase
+                        .getClient()
+                        .from('battle_logs')
+                        .insert({
+                        battle_id: battle.id,
+                        turn_number: battle.current_turn,
+                        actor_type: 'PLAYER',
+                        actor_id: userId,
+                        action_type: 'ATTACK',
+                        damage_dealt: damage,
+                        narrative: `💥 I progressi reali del Goal "${goal.title}" infliggono ${damage} danni a ${battle.bosses?.name || 'il Boss'}!${isDefeated ? ' Il Boss è stato sconfitto!' : ''}`,
+                    });
+                    if (isDefeated) {
+                        await this.battleService.distributeBattleRewards(battle.id, 'VICTORY');
+                    }
+                }
+            }
         }
         if (bonusXP > 0) {
-            let xp = currentXP + bonusXP;
-            let lvl = currentLevel;
-            let xpNext = xpToNext;
-            while (xp >= xpNext) {
-                lvl += 1;
-                xp -= xpNext;
-                xpNext = Math.floor(1000 * Math.pow(lvl, 1.5));
+            const { data: user } = await this.supabase
+                .getClient()
+                .from('users')
+                .select('xp_current, xp_to_next, level, stat_points')
+                .eq('id', userId)
+                .single();
+            if (user) {
+                let xp = user.xp_current + bonusXP;
+                let lvl = user.level;
+                let xpNext = user.xp_to_next;
+                let levels_gained = 0;
+                while (xp >= xpNext) {
+                    lvl += 1;
+                    levels_gained += 1;
+                    xp -= xpNext;
+                    xpNext = Math.floor(100 * Math.pow(lvl, 1.15) + 900);
+                }
+                await this.supabase
+                    .getClient()
+                    .from('users')
+                    .update({
+                    xp_current: xp,
+                    xp_to_next: xpNext,
+                    level: lvl,
+                    stat_points: (user.stat_points || 0) + (levels_gained * 5),
+                })
+                    .eq('id', userId);
             }
-            await this.supabase.getClient().from('users')
-                .update({ xp_current: xp, xp_to_next: xpNext, level: lvl })
-                .eq('id', userId);
         }
     }
     async getActivityHistory(userId, limit = 50) {
-        const { data, error } = await this.supabase.getClient()
+        const { data, error } = await this.supabase
+            .getClient()
             .from('activity_logs')
             .select('*')
             .eq('user_id', userId)
@@ -228,17 +451,27 @@ let PlayerService = class PlayerService {
     }
     async logActivity(userId, payload) {
         const intensity = payload.intensity_multiplier || 1.0;
-        const { data: user, error: fetchError } = await this.supabase.getClient()
+        const { data: user, error: fetchError } = await this.supabase
+            .getClient()
             .from('users')
-            .select('xp_current, xp_to_next, level, current_streak, highest_streak, last_login_date')
-            .eq('id', userId).single();
+            .select('xp_current, xp_to_next, level, current_streak, highest_streak, last_login_date, stat_points')
+            .eq('id', userId)
+            .single();
         if (fetchError || !user)
             throw new common_1.NotFoundException('Player not found');
-        let { xp_current, xp_to_next, level, current_streak, highest_streak, last_login_date } = user;
-        const { data: skillRows } = await this.supabase.getClient()
-            .from('player_skills').select('skill_id').eq('user_id', userId);
-        const unlockedIds = ['core_1', ...(skillRows ?? []).map((r) => r.skill_id)];
-        const activeSkills = unlockedIds.map(id => getSkillById(id)).filter((s) => !!s);
+        let { xp_current, xp_to_next, level, current_streak, highest_streak, last_login_date, stat_points, } = user;
+        const { data: skillRows } = await this.supabase
+            .getClient()
+            .from('player_skills')
+            .select('skill_id')
+            .eq('user_id', userId);
+        const unlockedIds = [
+            'core_1',
+            ...(skillRows ?? []).map((r) => r.skill_id),
+        ];
+        const activeSkills = unlockedIds
+            .map((id) => getSkillById(id))
+            .filter((s) => !!s);
         const todayStr = new Date().toISOString().split('T')[0];
         if (last_login_date) {
             const diffDays = Math.ceil(Math.abs(new Date(todayStr).getTime() - new Date(last_login_date).getTime()) / 86400000);
@@ -257,60 +490,87 @@ let PlayerService = class PlayerService {
         }
         let streakMultiplier = 1.0;
         if (current_streak >= 7)
-            streakMultiplier = 1.10;
+            streakMultiplier = 1.1;
         else if (current_streak >= 3)
             streakMultiplier = 1.05;
         const streakBonusTotal = activeSkills
-            .filter(s => s.effect.type === 'streak_bonus')
+            .filter((s) => s.effect.type === 'streak_bonus')
             .reduce((acc, s) => acc + s.effect.value, 0);
         if (current_streak >= 1)
             streakMultiplier += streakBonusTotal;
         const categoryBonus = activeSkills
-            .filter(s => s.effect.type === 'xp_multiplier_category' && s.effect.category === payload.category)
+            .filter((s) => s.effect.type === 'xp_multiplier_category' &&
+            s.effect.category === payload.category)
             .reduce((acc, s) => acc + s.effect.value, 0);
         const globalBonus = activeSkills
-            .filter(s => s.effect.type === 'xp_multiplier_global')
+            .filter((s) => s.effect.type === 'xp_multiplier_global')
             .reduce((acc, s) => acc + s.effect.value, 0);
         const xpMultiplier = (1 + categoryBonus + globalBonus) * streakMultiplier;
-        const statGainMult = 1 + activeSkills
-            .filter(s => s.effect.type === 'stat_gain_multiplier')
-            .reduce((acc, s) => acc + s.effect.value, 0);
+        const statGainMult = 1 +
+            activeSkills
+                .filter((s) => s.effect.type === 'stat_gain_multiplier')
+                .reduce((acc, s) => acc + s.effect.value, 0);
         const enduranceStreakBonusMultiplier = activeSkills
-            .filter(s => s.effect.type === 'stat_gain_streak_bonus')
-            .reduce((acc, s) => acc + (current_streak * s.effect.value), 0);
+            .filter((s) => s.effect.type === 'stat_gain_streak_bonus')
+            .reduce((acc, s) => acc + current_streak * s.effect.value, 0);
         const xp_yield = Math.floor(payload.duration_minutes * 10 * intensity * xpMultiplier);
-        const primary_stat_gain = parseFloat(((payload.duration_minutes / 60) * 0.08 * intensity * statGainMult).toFixed(2));
+        const primary_stat_gain = parseFloat(((payload.duration_minutes / 60) *
+            0.08 *
+            intensity *
+            statGainMult).toFixed(2));
         const base_endurance_gain = (payload.duration_minutes / 60) * 0.03 * intensity * statGainMult;
-        const extra_endurance_gain = (payload.duration_minutes / 60) * enduranceStreakBonusMultiplier * intensity;
+        const extra_endurance_gain = (payload.duration_minutes / 60) *
+            enduranceStreakBonusMultiplier *
+            intensity;
         const endurance_gain = parseFloat((base_endurance_gain + extra_endurance_gain).toFixed(2));
-        const knowledge_gain = payload.category === 'STUDY' ? parseFloat(((payload.duration_minutes / 60) * 0.05 * intensity * statGainMult).toFixed(2)) : 0;
+        const knowledge_gain = payload.category === 'STUDY'
+            ? parseFloat(((payload.duration_minutes / 60) *
+                0.05 *
+                intensity *
+                statGainMult).toFixed(2))
+            : 0;
         let levels_gained = 0;
         xp_current += xp_yield;
         while (xp_current >= xp_to_next) {
             level += 1;
             levels_gained += 1;
             xp_current -= xp_to_next;
-            xp_to_next = Math.floor(1000 * Math.pow(level, 1.5));
+            xp_to_next = Math.floor(100 * Math.pow(level, 1.15) + 900);
         }
-        const { error: updateError } = await this.supabase.getClient()
+        const { error: updateError } = await this.supabase
+            .getClient()
             .from('users')
-            .update({ xp_current, xp_to_next, level, current_streak, highest_streak, last_login_date: todayStr })
+            .update({
+            xp_current,
+            xp_to_next,
+            level,
+            current_streak,
+            highest_streak,
+            last_login_date: todayStr,
+            stat_points: (stat_points || 0) + (levels_gained * 5),
+        })
             .eq('id', userId);
         if (updateError)
-            throw new common_1.InternalServerErrorException('Errore nell\'aggiornamento del giocatore');
-        let stats_yield = {};
-        const { data: currentStats, error: statError } = await this.supabase.getClient()
-            .from('character_stats').select('*').eq('user_id', userId).single();
+            throw new common_1.InternalServerErrorException("Errore nell'aggiornamento del giocatore");
+        const stats_yield = {};
+        const { data: currentStats, error: statError } = await this.supabase
+            .getClient()
+            .from('character_stats')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
         if (!statError && currentStats) {
-            let updates = {};
+            const updates = {};
             if (payload.stat_type && primary_stat_gain > 0) {
                 stats_yield[payload.stat_type] = primary_stat_gain;
                 updates[payload.stat_type] = parseFloat((Number(currentStats[payload.stat_type] || 1) + primary_stat_gain).toFixed(2));
             }
             if (endurance_gain > 0) {
                 if (payload.stat_type === 'endurance') {
-                    updates['endurance'] = parseFloat((Number(updates['endurance'] || currentStats.endurance || 1) + endurance_gain).toFixed(2));
-                    stats_yield['endurance'] = (stats_yield['endurance'] || 0) + endurance_gain;
+                    updates['endurance'] = parseFloat((Number(updates['endurance'] || currentStats.endurance || 1) +
+                        endurance_gain).toFixed(2));
+                    stats_yield['endurance'] =
+                        (stats_yield['endurance'] || 0) + endurance_gain;
                 }
                 else {
                     stats_yield['endurance'] = endurance_gain;
@@ -319,8 +579,10 @@ let PlayerService = class PlayerService {
             }
             if (knowledge_gain > 0) {
                 if (payload.stat_type === 'knowledge') {
-                    updates['knowledge'] = parseFloat((Number(updates['knowledge'] || currentStats.knowledge || 1) + knowledge_gain).toFixed(2));
-                    stats_yield['knowledge'] = (stats_yield['knowledge'] || 0) + knowledge_gain;
+                    updates['knowledge'] = parseFloat((Number(updates['knowledge'] || currentStats.knowledge || 1) +
+                        knowledge_gain).toFixed(2));
+                    stats_yield['knowledge'] =
+                        (stats_yield['knowledge'] || 0) + knowledge_gain;
                 }
                 else {
                     stats_yield['knowledge'] = knowledge_gain;
@@ -333,13 +595,17 @@ let PlayerService = class PlayerService {
                 updates['health'] = parseFloat((Number(currentStats.health || 1) + health_gain).toFixed(2));
             }
             if (Object.keys(updates).length > 0) {
-                await this.supabase.getClient()
+                await this.supabase
+                    .getClient()
                     .from('character_stats')
                     .update(updates)
                     .eq('user_id', userId);
             }
         }
-        await this.supabase.getClient().from('activity_logs').insert({
+        await this.supabase
+            .getClient()
+            .from('activity_logs')
+            .insert({
             user_id: userId,
             category: payload.category,
             custom_name: payload.custom_name || payload.category,
@@ -351,7 +617,9 @@ let PlayerService = class PlayerService {
         await this.updateGoalProgress(userId, payload.category, payload.duration_minutes, level, xp_current, xp_to_next);
         await this.guildService.updateGuildQuestProgress(userId, payload.category, payload.duration_minutes);
         await this.checkAchievements(userId, {
-            level, current_streak, category: payload.category,
+            level,
+            current_streak,
+            category: payload.category,
             custom_name: payload.custom_name,
         });
         return this.getPlayerStats(userId);
@@ -396,7 +664,10 @@ let PlayerService = class PlayerService {
             enduranceBonus += 2;
         }
         const cls = payload.className?.toLowerCase() || 'warrior';
-        if (cls === 'barbaro' || cls === 'barbarian' || cls === 'warrior' || cls === 'guerriero') {
+        if (cls === 'barbaro' ||
+            cls === 'barbarian' ||
+            cls === 'warrior' ||
+            cls === 'guerriero') {
             strengthBonus += 2;
             enduranceBonus += 2;
         }
@@ -412,29 +683,44 @@ let PlayerService = class PlayerService {
             knowledgeBonus += 2;
             disciplineBonus += 2;
         }
-        const { data: stats } = await this.supabase.getClient()
-            .from('character_stats').select('*').eq('user_id', userId).single();
+        const { data: stats } = await this.supabase
+            .getClient()
+            .from('character_stats')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
         if (stats) {
-            await this.supabase.getClient().from('character_stats').update({
+            await this.supabase
+                .getClient()
+                .from('character_stats')
+                .update({
                 intelligence: parseFloat((Number(stats.intelligence) + intelligenceBonus).toFixed(2)),
                 discipline: parseFloat((Number(stats.discipline) + disciplineBonus).toFixed(2)),
                 strength: parseFloat((Number(stats.strength) + strengthBonus).toFixed(2)),
                 endurance: parseFloat((Number(stats.endurance) + enduranceBonus).toFixed(2)),
                 focus: parseFloat((Number(stats.focus || 1) + focusBonus).toFixed(2)),
                 knowledge: parseFloat((Number(stats.knowledge || 1) + knowledgeBonus).toFixed(2)),
-            }).eq('user_id', userId);
+            })
+                .eq('user_id', userId);
         }
         const avatarId = payload.avatarId || `${race}-${cls}`;
-        const { data: userRow } = await this.supabase.getClient()
-            .from('users').select('xp_current').eq('id', userId).single();
+        const { data: userRow } = await this.supabase
+            .getClient()
+            .from('users')
+            .select('xp_current')
+            .eq('id', userId)
+            .single();
         if (userRow) {
-            await this.supabase.getClient().from('users')
+            await this.supabase
+                .getClient()
+                .from('users')
                 .update({
                 xp_current: userRow.xp_current + 500,
                 race: payload.race,
                 class_name: payload.className,
-                avatar_id: avatarId
-            }).eq('id', userId);
+                avatar_id: avatarId,
+            })
+                .eq('id', userId);
         }
         const initialGoals = [];
         if (payload.studyHoursWeekly > 0) {
@@ -458,11 +744,50 @@ let PlayerService = class PlayerService {
         }
         return this.getPlayerStats(userId);
     }
+    async allocateStatPoints(userId, payload) {
+        const client = this.supabase.getClient();
+        const { data: user, error: userError } = await client
+            .from('users')
+            .select('stat_points')
+            .eq('id', userId)
+            .single();
+        if (userError || !user)
+            throw new common_1.NotFoundException('Player not found');
+        if (payload.points <= 0 || !Number.isInteger(payload.points)) {
+            throw new common_1.BadRequestException('Points must be a positive integer');
+        }
+        if ((user.stat_points || 0) < payload.points) {
+            throw new common_1.BadRequestException('Not enough stat points');
+        }
+        const { data: stats, error: statError } = await client
+            .from('character_stats')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        if (statError || !stats)
+            throw new common_1.NotFoundException('Character stats not found');
+        const currentVal = Number(stats[payload.stat] || 0);
+        const newVal = parseFloat((currentVal + payload.points * 1.0).toFixed(2));
+        const { error: userUpdateError } = await client
+            .from('users')
+            .update({ stat_points: user.stat_points - payload.points })
+            .eq('id', userId);
+        if (userUpdateError)
+            throw new common_1.InternalServerErrorException('Error updating stat points');
+        const { error: statUpdateError } = await client
+            .from('character_stats')
+            .update({ [payload.stat]: newVal })
+            .eq('id', userId);
+        if (statUpdateError)
+            throw new common_1.InternalServerErrorException('Error updating stats');
+        return this.getPlayerStats(userId);
+    }
 };
 exports.PlayerService = PlayerService;
 exports.PlayerService = PlayerService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [supabase_service_1.SupabaseService,
-        guild_service_1.GuildService])
+        guild_service_1.GuildService,
+        battle_service_1.BattleService])
 ], PlayerService);
 //# sourceMappingURL=player.service.js.map

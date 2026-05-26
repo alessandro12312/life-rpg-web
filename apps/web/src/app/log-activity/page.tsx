@@ -9,6 +9,7 @@ import { Swords, BookOpen, Activity, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
+import { GlassCard } from "@/components/ui/glass-card";
 
 export default function LogActivityPage() {
     const router = useRouter();
@@ -65,14 +66,14 @@ export default function LogActivityPage() {
     };
 
     return (
-        <main className="min-h-screen bg-background text-foreground p-4 lg:p-8 flex items-center justify-center">
-            <div className="max-w-md w-full relative">
-                <Link href="/" className="absolute -top-12 left-0 text-foreground/50 hover:text-primary transition flex items-center gap-2">
-                    <ArrowLeft className="w-4 h-4" /> Torna alla Gilda
+        <div className="flex items-center justify-center min-h-[70vh] py-8">
+            <div className="max-w-md w-full relative mt-8">
+                <Link href="/" className="absolute -top-10 left-0 text-foreground/50 hover:text-primary transition flex items-center gap-2 text-sm">
+                    <ArrowLeft className="w-4 h-4" /> Torna alla Dashboard
                 </Link>
 
-                <div className="bg-surface/50 border border-surface-border p-6 rounded-2xl backdrop-blur-md shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+                <GlassCard glow={true} glowColor="primary" hoverEffect={false} className="p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
                     <h1 className="text-2xl font-bold tracking-tight mb-6 flex items-center gap-2">
                         <Activity className="w-6 h-6 text-primary" /> Log Manuale
@@ -148,8 +149,8 @@ export default function LogActivityPage() {
                         </Button>
 
                     </form>
-                </div>
+                </GlassCard>
             </div>
-        </main>
+        </div>
     );
 }

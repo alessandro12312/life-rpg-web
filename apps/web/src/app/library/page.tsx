@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { UploadCloud, FileText, Sparkles, ArrowLeft, BookOpen, BrainCircuit } from "lucide-react";
 import Link from "next/link";
+import { GlassCard } from "@/components/ui/glass-card";
 
 export default function TheLibrary() {
     const [isDragging, setIsDragging] = useState(false);
@@ -38,25 +39,33 @@ export default function TheLibrary() {
         }, 2500);
     };
 
-    return (
-        <main className="min-h-screen bg-background text-foreground p-4 lg:p-8 font-sans selection:bg-accent/30">
-            <div className="max-w-4xl mx-auto space-y-8">
+    const btnClass = !uploadedFile
+        ? 'flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all bg-surface text-foreground/30 cursor-not-allowed'
+        : isGenerating
+            ? 'flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all bg-accent/20 text-accent border border-accent/50 cursor-wait'
+            : 'flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all bg-primary text-black shadow-lg hover:shadow-xl hover:scale-105';
 
-                {/* Header / Navigation */}
-                <header className="flex items-center gap-4 border-b border-surface-border pb-6">
-                    <Link href="/">
-                        <button className="p-2 hover:bg-surface rounded-full transition-colors text-foreground/60 hover:text-foreground">
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                    </Link>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                            <BookOpen className="w-8 h-8 text-[#3b82f6]" />
-                            The Library
-                        </h1>
-                        <p className="text-foreground/60">Upload your knowledge. Face the Oracle's trials.</p>
-                    </div>
-                </header>
+    const dropZoneClass = isDragging
+        ? 'relative overflow-hidden border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-300 min-h-[320px] border-cyan-400 bg-cyan-950/10 scale-[1.01]'
+        : 'relative overflow-hidden border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-300 min-h-[320px] border-zinc-800 bg-[#0c0c14]/90 hover:border-cyan-500/30 hover:bg-[#0f0f1a]/95';
+
+    return (
+        <div className="space-y-8">
+
+            {/* Header / Navigation */}
+            <header className="flex items-center gap-4 pb-2">
+                <Link href="/">
+                    <button className="p-3 bg-surface/80 backdrop-blur border border-surface-border hover:bg-surface rounded-full transition-colors text-foreground">
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                </Link>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-primary drop-shadow-[0_0_10px_rgba(245,158,11,0.5)] flex items-center gap-3">
+                        <BookOpen className="w-6 h-6 text-blue-400 opacity-80" /> The Library
+                    </h1>
+                    <p className="text-foreground/70 text-sm mt-1">Upload your knowledge. Face the Oracle's trials.</p>
+                </div>
+            </header>
 
                 <div className="grid md:grid-cols-5 gap-6">
 
@@ -71,15 +80,23 @@ export default function TheLibrary() {
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
-                            className={`relative overflow-hidden border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-300 min-h-[300px]
-                ${isDragging
-                                    ? 'border-accent bg-accent/5 scale-[1.02]'
-                                    : 'border-surface-border bg-surface/30 hover:border-foreground/30 hover:bg-surface/50'
-                                }
-              `}
+                            className={dropZoneClass}
                         >
-                            {/* Background Glow */}
-                            <div className="absolute inset-0 bg-gradient-radial from-accent/5 to-transparent pointer-events-none" />
+                            {/* Cyan scanning laser beam */}
+                            <motion.div
+                                className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#22d3ee,0_0_4px_#22d3ee] z-20 pointer-events-none"
+                                initial={{ top: "0%" }}
+                                animate={{ top: "100%" }}
+                                transition={{
+                                    duration: 3.5,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    repeatType: "reverse"
+                                }}
+                            />
+
+                            {/* Background Radial Glow */}
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.04)_0%,transparent_70%)] pointer-events-none" />
 
                             {!uploadedFile ? (
                                 <motion.div
@@ -87,37 +104,38 @@ export default function TheLibrary() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="z-10"
                                 >
-                                    <div className="w-20 h-20 mx-auto bg-surface border border-surface-border rounded-full flex items-center justify-center mb-6 shadow-lg shadow-black/50">
-                                        <UploadCloud className={`w-10 h-10 ${isDragging ? 'text-accent' : 'text-foreground/40'}`} />
+                                    <div className="w-20 h-20 mx-auto bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-black/50 relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <UploadCloud className={`w-10 h-10 transition-colors ${isDragging ? 'text-cyan-400' : 'text-foreground/40'}`} />
                                     </div>
-                                    <h3 className="text-lg font-medium mb-2">Offer your notes to the AI</h3>
-                                    <p className="text-sm text-foreground/50 max-w-xs mx-auto">
+                                    <h3 className="text-lg font-bold mb-2">Offer your scrolls to the Oracle</h3>
+                                    <p className="text-xs text-foreground/50 max-w-xs mx-auto leading-relaxed">
                                         Drag and drop PDF, Markdown, or Text files here. Maximum 10MB per offering.
                                     </p>
                                     <div className="mt-8 flex items-center justify-center gap-4">
-                                        <span className="h-px w-12 bg-surface-border"></span>
-                                        <span className="text-xs text-foreground/40 uppercase tracking-widest">or</span>
-                                        <span className="h-px w-12 bg-surface-border"></span>
+                                        <span className="h-px w-12 bg-zinc-800"></span>
+                                        <span className="text-xs text-foreground/30 uppercase tracking-widest font-mono">or</span>
+                                        <span className="h-px w-12 bg-zinc-800"></span>
                                     </div>
-                                    <button className="mt-6 px-6 py-2 rounded-full border border-surface-border bg-surface hover:bg-foreground hover:text-background transition-colors text-sm font-medium">
+                                    <button className="mt-6 px-6 py-2 rounded-full border border-zinc-800 bg-zinc-900 hover:bg-cyan-400 hover:text-black hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all text-xs font-semibold">
                                         Browse Scrolls
                                     </button>
                                 </motion.div>
                             ) : (
                                 <motion.div
-                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    initial={{ scale: 0.95, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     className="z-10 w-full"
                                 >
-                                    <div className="bg-surface border border-surface-border rounded-xl p-6 shadow-2xl relative overflow-hidden group">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                        <FileText className="w-12 h-12 text-[#3b82f6] mx-auto mb-4" />
-                                        <h3 className="font-mono text-lg truncate px-4">{uploadedFile}</h3>
-                                        <p className="text-sm text-foreground/50 mt-1">Offering accepted.</p>
+                                    <div className="bg-[#12121e] border border-cyan-500/20 rounded-xl p-6 shadow-2xl relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        <FileText className="w-12 h-12 text-cyan-400 mx-auto mb-4 drop-shadow-[0_0_8px_rgba(6,182,212,0.3)] animate-pulse" />
+                                        <h3 className="font-mono text-sm truncate px-4">{uploadedFile}</h3>
+                                        <p className="text-[10px] text-cyan-400/70 font-semibold tracking-wider uppercase mt-1">Scroll Accepted by Oracle</p>
 
                                         <button
                                             onClick={() => setUploadedFile(null)}
-                                            className="mt-6 text-xs text-red-500 hover:text-red-400 underline decoration-red-500/30 underline-offset-4"
+                                            className="mt-6 text-xs text-red-400 hover:text-red-300 underline decoration-red-500/30 underline-offset-4 font-medium"
                                         >
                                             Retract Offering
                                         </button>
@@ -131,14 +149,7 @@ export default function TheLibrary() {
                             <button
                                 onClick={handleGenerateQuiz}
                                 disabled={!uploadedFile || isGenerating}
-                                className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all
-                  ${!uploadedFile
-                                        ? 'bg-surface text-foreground/30 cursor-not-allowed'
-                                        : isGenerating
-                                            ? 'bg-accent/20 text-accent border border-accent/50 cursor-wait'
-                                            : 'bg-primary text-[#09090b] shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] hover:scale-[1.02]'
-                                    }
-                `}
+                                className={btnClass}
                             >
                                 {isGenerating ? (
                                     <>
@@ -172,7 +183,12 @@ export default function TheLibrary() {
                                 { name: "Biology_Ch4_Summary.txt", score: "60%", date: "Yesterday", xp: "+120" },
                                 { name: "Design_Patterns.md", score: "100%", date: "3d ago", xp: "+600" },
                             ].map((trial, i) => (
-                                <div key={i} className="bg-surface/30 border border-surface-border p-4 rounded-xl flex items-center justify-between hover:bg-surface/50 transition-colors cursor-pointer group">
+                                <GlassCard
+                                    key={i}
+                                    glow
+                                    glowColor="primary"
+                                    className="p-4 flex items-center justify-between cursor-pointer"
+                                >
                                     <div className="overflow-hidden pr-4">
                                         <h4 className="text-sm font-medium truncate group-hover:text-primary transition-colors">{trial.name}</h4>
                                         <p className="text-xs text-foreground/50 mt-1">{trial.date} • {trial.score}</p>
@@ -180,11 +196,11 @@ export default function TheLibrary() {
                                     <div className="text-right shrink-0">
                                         <span className="text-xs font-mono text-primary font-bold bg-primary/10 px-2 py-1 rounded">{trial.xp} XP</span>
                                     </div>
-                                </div>
+                                </GlassCard>
                             ))}
                         </div>
 
-                        <div className="mt-8 p-6 bg-surface/50 border border-surface-border rounded-2xl">
+                        <GlassCard className="mt-8 p-6" hoverEffect={false}>
                             <h3 className="text-sm font-semibold mb-2 text-[#3b82f6]">Knowledge XP Multiplier</h3>
                             <p className="text-xs text-foreground/60 leading-relaxed mb-4">
                                 Passing AI-generated trials yields pure Intelligence and Knowledge stats. Perfect scores grant critical bonuses.
@@ -192,11 +208,10 @@ export default function TheLibrary() {
                             <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
                                 <div className="w-3/4 h-full bg-[#3b82f6] shadow-[0_0_10px_#3b82f6]"></div>
                             </div>
-                        </div>
+                        </GlassCard>
                     </aside>
 
                 </div>
-            </div>
-        </main>
+        </div>
     );
 }

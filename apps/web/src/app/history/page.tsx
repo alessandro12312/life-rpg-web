@@ -8,6 +8,8 @@ import { usePlayerStore } from "@/store/usePlayerStore";
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { GlassCard } from "@/components/ui/glass-card";
+import { cn } from "@/lib/utils";
 
 interface ActivityLog {
     id: number;
@@ -72,17 +74,13 @@ export default function TheChronicles() {
     };
 
     return (
-        <main className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 flex flex-col relative overflow-y-auto pb-12">
-            <div className="absolute inset-0 bg-[#09090b] -z-10 fixed" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-surface/40 via-background to-background -z-10 fixed"></div>
-
-            <div className="max-w-3xl mx-auto w-full p-6 pt-12 space-y-8 relative z-10">
-                <header className="flex items-center gap-4 mb-2">
-                    <Link href="/">
-                        <button className="p-3 bg-surface/80 backdrop-blur border border-surface-border hover:bg-surface rounded-full transition-colors text-foreground">
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                    </Link>
+        <div className="space-y-8">
+            <header className="flex items-center gap-4 mb-2">
+                <Link href="/">
+                    <button className="p-3 bg-surface/80 backdrop-blur border border-surface-border hover:bg-surface rounded-full transition-colors text-foreground">
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                </Link>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-primary drop-shadow-[0_0_10px_rgba(245,158,11,0.5)] flex items-center gap-3">
                             <Flame className="w-6 h-6 text-orange-500 opacity-80" /> The Chronicles
@@ -102,12 +100,14 @@ export default function TheChronicles() {
                         </div>
                     ) : (
                         activities.map((act, index) => (
-                            <motion.div
+                            <GlassCard
                                 key={act.id}
+                                glow
+                                glowColor={act.category === 'STUDY' ? 'int' : act.category === 'WORKOUT' ? 'str' : 'end'}
+                                className={cn("p-5 flex gap-4 border", getCategoryColor(act.category))}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                className={`p-5 rounded-2xl relative overflow-hidden border backdrop-blur-xl flex gap-4 ${getCategoryColor(act.category)}`}
                             >
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
                                 
@@ -144,11 +144,10 @@ export default function TheChronicles() {
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </GlassCard>
                         ))
                     )}
                 </div>
             </div>
-        </main>
     );
 }

@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { GlassCard } from "@/components/ui/glass-card";
 
 interface Guild {
     id: string;
@@ -85,7 +86,7 @@ export function GuildHall({ onJoinGuild }: { onJoinGuild: (guild: any) => void }
     );
 
     return (
-        <div className="w-full max-w-6xl mx-auto p-4 lg:p-8">
+        <div className="w-full space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
@@ -139,12 +140,15 @@ export function GuildHall({ onJoinGuild }: { onJoinGuild: (guild: any) => void }
                     ) : (
                         <div className="space-y-3">
                             {filteredGuilds.map((guild) => (
-                                <motion.div
+                                <GlassCard
                                     key={guild.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="bg-surface/50 border border-surface-border rounded-xl p-4 hover:bg-surface/70 transition-all group cursor-pointer"
+                                    glow={true}
+                                    glowColor="primary"
+                                    hoverEffect={true}
                                     onClick={() => handleJoin(guild.id)}
+                                    className="p-4 cursor-pointer"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -179,7 +183,7 @@ export function GuildHall({ onJoinGuild }: { onJoinGuild: (guild: any) => void }
                                     {guild.description && (
                                         <p className="text-xs text-foreground/50 mt-2 pl-15">{guild.description}</p>
                                     )}
-                                </motion.div>
+                                </GlassCard>
                             ))}
                         </div>
                     )}
@@ -192,11 +196,12 @@ export function GuildHall({ onJoinGuild }: { onJoinGuild: (guild: any) => void }
                         animate={{ opacity: 1, x: 0 }}
                         className="lg:col-span-1"
                     >
-                        <form onSubmit={handleCreate} className="bg-surface/50 border border-amber-500/20 rounded-2xl p-6 space-y-4 sticky top-8">
-                            <h2 className="text-lg font-semibold flex items-center gap-2">
-                                <Crown className="w-5 h-5 text-amber-500" />
-                                Fonda la Tua Gilda
-                            </h2>
+                        <GlassCard glow={true} glowColor="primary" hoverEffect={false} className="p-6 sticky top-8">
+                            <form onSubmit={handleCreate} className="space-y-4">
+                                <h2 className="text-lg font-semibold flex items-center gap-2">
+                                    <Crown className="w-5 h-5 text-amber-500" />
+                                    Fonda la Tua Gilda
+                                </h2>
 
                             <div>
                                 <label className="block text-xs text-foreground/60 mb-1">Nome Gilda *</label>
@@ -246,7 +251,8 @@ export function GuildHall({ onJoinGuild }: { onJoinGuild: (guild: any) => void }
                                     "⚔️ Fonda Gilda"
                                 )}
                             </Button>
-                        </form>
+                            </form>
+                        </GlassCard>
                     </motion.div>
                 )}
             </div>

@@ -101,6 +101,7 @@ interface BattleState {
     // Core state
     battleId: string | null;
     status: 'IDLE' | 'WAITING' | 'ACTIVE' | 'VICTORY' | 'DEFEAT' | 'ABANDONED';
+    mode: 'SOLO' | 'PARTY' | 'RAID' | null;
 
     // Boss
     boss: BossState | null;
@@ -142,6 +143,7 @@ interface BattleState {
 const initialState = {
     battleId: null,
     status: 'IDLE' as const,
+    mode: null,
     boss: null,
     currentPhase: 1,
     totalPhases: 1,
@@ -162,9 +164,97 @@ export const useBattleStore = create<BattleState>()((set, get) => ({
     ...initialState,
 
     setBattleFromServer: (data: any, currentUserId: string) => {
+        const state = get();
+        const newLogs = data.logs || [];
+        const oldLogs = state.battleLogs;
+
+        // If the battle ID is the same, we check for new logs to animate
+        const queue: AnimationEvent[] = [];
+        if (state.battleId === data.battle.id && oldLogs.length > 0 && newLogs.length > oldLogs.length) {
+            // Find logs that are in newLogs but not in oldLogs
+            // Since logs are sorted by createdAt descending, newLogs[0] is the latest log.
+            // We use the unique combination of createdAt and narrative to identify seen logs.
+            const oldLogKeys = new Set(oldLogs.map((l: any) => `${l.createdAt || l.created_at}_${l.narrative}`));
+            const freshLogs = newLogs.filter((l: any) => !oldLogKeys.has(`${l.createdAt || l.created_at}_${l.narrative}`));
+
+            // Reverse freshLogs so they are animated in chronological order (oldest of the new logs first)
+            freshLogs.reverse();
+
+            for (const log of freshLogs) {
+                const eventId = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+                // We only animate actions taken by other players or the boss,
+                // because our own actions were already animated via submitAction / processTurnResponse.
+                const isMyAction = log.actorType === 'PLAYER' && log.actorId === currentUserId;
+
+                if (!isMyAction) {
+                    if (log.actionType === 'ATTACK') {
+                        queue.push({ id: eventId + '_atk', type: 'PLAYER_ATTACK', target: 'BOSS' });
+                        if (log.isMiss) {
+                            queue.push({ id: eventId + '_miss', type: 'MISS', target: 'BOSS', narrative: log.narrative });
+                        } else {
+                            queue.push({
+                                id: eventId + '_dmg', type: 'DAMAGE_NUMBER',
+                                value: log.damageDealt, target: 'BOSS', isCritical: log.isCritical,
+                            });
+                            if (log.isCritical) {
+                                queue.push({ id: eventId + '_shake', type: 'SCREEN_SHAKE' });
+                            }
+                        }
+                    } else if (log.actionType === 'SKILL') {
+                        queue.push({ id: eventId + '_skill', type: 'PLAYER_SKILL', target: 'BOSS' });
+                        if (log.damageDealt > 0) {
+                            queue.push({
+                                id: eventId + '_dmg', type: 'DAMAGE_NUMBER',
+                                value: log.damageDealt, target: 'BOSS', isCritical: log.isCritical,
+                            });
+                        }
+                        if (log.healingDone > 0) {
+                            queue.push({
+                                id: eventId + '_heal', type: 'HEAL_NUMBER',
+                                value: log.healingDone, target: 'PLAYER',
+                            });
+                        }
+                    } else if (log.actionType === 'DEFEND') {
+                        queue.push({ id: eventId + '_def', type: 'PLAYER_DEFEND' });
+                    } else if (log.actionType === 'ITEM') {
+                        queue.push({ id: eventId + '_item', type: 'PLAYER_ITEM' });
+                        if (log.healingDone > 0) {
+                            queue.push({
+                                id: eventId + '_heal', type: 'HEAL_NUMBER',
+                                value: log.healingDone, target: 'PLAYER',
+                            });
+                        }
+                        if (log.damageDealt > 0) {
+                            queue.push({
+                                id: eventId + '_dmg', type: 'DAMAGE_NUMBER',
+                                value: log.damageDealt, target: 'BOSS',
+                            });
+                        }
+                    } else if (log.actionType === 'BOSS_ATTACK' || log.actionType === 'BOSS_SKILL') {
+                        if (log.narrative?.includes('Fase')) {
+                            queue.push({ id: eventId + '_phase', type: 'PHASE_TRANSITION', narrative: log.narrative });
+                        } else if (log.narrative?.includes('Vittoria')) {
+                            queue.push({ id: eventId + '_victory', type: 'VICTORY', narrative: log.narrative });
+                        } else if (log.narrative?.includes('sconfitto')) {
+                            queue.push({ id: eventId + '_defeat', type: 'DEFEAT', narrative: log.narrative });
+                        } else if (log.damageDealt > 0) {
+                            queue.push({ id: eventId + '_boss_atk', type: 'BOSS_ATTACK', target: 'PLAYER' });
+                            queue.push({
+                                id: eventId + '_boss_dmg', type: 'DAMAGE_NUMBER',
+                                value: log.damageDealt, target: 'PLAYER',
+                            });
+                            queue.push({ id: eventId + '_shake', type: 'SCREEN_SHAKE' });
+                        }
+                    }
+                }
+            }
+        }
+
         set({
             battleId: data.battle.id,
             status: data.battle.status.toUpperCase(),
+            mode: data.battle.mode,
             boss: data.boss,
             currentPhase: data.battle.currentPhase,
             totalPhases: data.battle.totalPhases,
@@ -173,9 +263,10 @@ export const useBattleStore = create<BattleState>()((set, get) => ({
             isPlayerTurn: data.battle.activeParticipantId === currentUserId,
             turnNumber: data.battle.currentTurn,
             activeParticipantId: data.battle.activeParticipantId,
-            battleLogs: data.logs || [],
+            battleLogs: newLogs,
             availableSkills: data.availableSkills || [],
             inventory: data.inventory || [],
+            animationQueue: [...state.animationQueue, ...queue],
         });
     },
 
@@ -264,6 +355,7 @@ export const useBattleStore = create<BattleState>()((set, get) => ({
         set({
             battleId: data.battle.id,
             status: data.battle.status.toUpperCase(),
+            mode: data.battle.mode,
             boss: data.boss,
             currentPhase: data.battle.currentPhase,
             totalPhases: data.battle.totalPhases,

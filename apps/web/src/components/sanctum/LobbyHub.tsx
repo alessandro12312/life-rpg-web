@@ -4,6 +4,7 @@ import { Users, Lock, Unlock, Play, Server, Search, ChevronLeft } from "lucide-r
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
 import Link from "next/link";
 
 export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, userId: string }) {
@@ -118,17 +119,17 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
     };
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-10">
+        <div className="w-full space-y-6">
+            <div className="flex justify-between items-center">
                 <div>
-                    <Link href="/" className="inline-flex items-center gap-2 text-foreground/50 hover:text-primary transition-colors text-sm font-bold mb-4 uppercase tracking-wider">
-                        <ChevronLeft className="w-4 h-4" /> Torna alla Gilda
+                    <Link href="/" className="inline-flex items-center gap-2 text-foreground/50 hover:text-primary transition-colors text-xs font-bold mb-3 uppercase tracking-wider">
+                        <ChevronLeft className="w-3.5 h-3.5" /> Torna alla Dashboard
                     </Link>
-                    <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-                        <Server className="text-primary w-8 h-8" />
+                    <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-3">
+                        <Server className="text-primary w-8 h-8 animate-pulse" />
                         Lobby Sanctum
                     </h1>
-                    <p className="text-foreground/60">Unisciti agli altri eroi per sessioni sincronizzate.</p>
+                    <p className="text-foreground/60 text-sm">Unisciti agli altri eroi per sessioni sincronizzate.</p>
                 </div>
             </div>
 
@@ -159,7 +160,7 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
                             </div>
                         ) : (
                             lobbies.filter(l => l.title.toLowerCase().includes(searchQuery.toLowerCase())).map(lobby => (
-                                <div key={lobby.id} className="bg-surface/50 border border-surface-border p-5 rounded-2xl hover:bg-surface/80 transition group relative overflow-hidden">
+                                <GlassCard key={lobby.id} glow={true} glowColor={lobby.category === "STUDY" ? "accent" : "primary"} className="p-5 relative overflow-hidden">
                                     {lobby.status === 'FOCUSING' && <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/20 blur-xl rounded-full" />}
                                     <div className="flex justify-between items-start mb-3">
                                         <div>
@@ -190,14 +191,14 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
                                             <Play className="w-3 h-3" /> {lobby.status === 'WAITING' ? 'Entra' : 'Rientra in Corsa'}
                                         </Button>
                                     </div>
-                                </div>
+                                </GlassCard>
                             ))
                         )}
                     </div>
                 </div>
 
                 {/* Right: Create Lobby Form */}
-                <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-surface border border-surface-border p-6 rounded-2xl sticky top-8">
+                <GlassCard hoverEffect={false} className="w-full lg:w-80 xl:w-96 flex-shrink-0 p-6 sticky top-8">
                     <h2 className="text-xl font-bold mb-6">Forgia Stanza</h2>
                     <form onSubmit={handleCreate} className="flex flex-col gap-4">
                         <div>
@@ -243,7 +244,7 @@ export function LobbyHub({ onJoin, userId }: { onJoin: (lobby: any) => void, use
                             Crea Lobby
                         </Button>
                     </form>
-                </div>
+                </GlassCard>
 
             </div>
 

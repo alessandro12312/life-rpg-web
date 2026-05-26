@@ -3,6 +3,7 @@ import { LogActivityDto } from './dto/log-activity.dto';
 import { OnboardPlayerDto } from './dto/onboard-player.dto';
 import { UnlockSkillDto } from './dto/unlock-skill.dto';
 import { CreateGoalDto } from './dto/create-goal.dto';
+import { AllocateStatsDto } from './dto/allocate-stats.dto';
 export declare class PlayerController {
     private readonly playerService;
     constructor(playerService: PlayerService);
@@ -26,4 +27,5 @@ export declare class PlayerController {
     }>;
     getGoals(req: any): Promise<any[]>;
     createGoal(req: any, body: CreateGoalDto): Promise<any>;
+    allocateStatPoints(req: any, body: AllocateStatsDto): Promise<any>;
 }
