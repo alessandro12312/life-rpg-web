@@ -23,6 +23,7 @@ export default function TavernDashboard() {
   const [statView, setStatView] = useState<'chart' | 'table'>('chart');
   const [timeStr, setTimeStr] = useState("");
   const [allocating, setAllocating] = useState<string | null>(null);
+  const [resetCountdown, setResetCountdown] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -32,6 +33,69 @@ export default function TavernDashboard() {
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load completed quests from localStorage on mount
+  useEffect(() => {
+    const getTodayDateString = () => {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    };
+
+    try {
+      const stored = localStorage.getItem("life-rpg-completed-quests");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.date === getTodayDateString()) {
+          setCompletedQuests(parsed.completed || []);
+        } else {
+          // New day, reset
+          setCompletedQuests([]);
+          localStorage.setItem("life-rpg-completed-quests", JSON.stringify({
+            date: getTodayDateString(),
+            completed: []
+          }));
+        }
+      } else {
+        localStorage.setItem("life-rpg-completed-quests", JSON.stringify({
+          date: getTodayDateString(),
+          completed: []
+        }));
+      }
+    } catch (e) {
+      console.error("Error reading completed quests from localStorage", e);
+    }
+  }, []);
+
+  // Update countdown timer and handle daily reset
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0); // Next midnight
+
+      const diff = midnight.getTime() - now.getTime();
+      if (diff <= 0) {
+        // Midnight crossed! Reset quests
+        setCompletedQuests([]);
+        const nextDayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        localStorage.setItem("life-rpg-completed-quests", JSON.stringify({
+          date: nextDayStr,
+          completed: []
+        }));
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setResetCountdown(`Resets in ${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -161,7 +225,18 @@ export default function TavernDashboard() {
         const data = await res.json();
         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
         usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points, data.avatar_id);
-        setCompletedQuests(prev => [...prev, questId]);
+        
+        // Save to localStorage
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        setCompletedQuests(prev => {
+          const next = [...prev, questId];
+          localStorage.setItem("life-rpg-completed-quests", JSON.stringify({
+            date: dateStr,
+            completed: next
+          }));
+          return next;
+        });
       }
     } catch (e) {
       console.error(e);
@@ -388,7 +463,7 @@ export default function TavernDashboard() {
           <section className="bg-surface/10 border border-surface-border/50 rounded-2xl p-6">
             <div className="flex justify-between items-end mb-4 px-1">
               <h2 className="text-lg font-semibold text-foreground/80">Daily Quests</h2>
-              <span className="text-sm text-primary/80 font-mono">Resets in 6h 24m</span>
+              <span className="text-sm text-primary/80 font-mono">{resetCountdown || "Resets in --:--:--"}</span>
             </div>
 
             <div className="space-y-3">
