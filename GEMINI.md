@@ -78,3 +78,23 @@ Always follow this sequence when implementing features:
 - `apps/web/src/store/usePlayerStore.ts`: Client-side progression state.
 - `apps/api/src/player/player.service.ts`: Core logic for XP, levels, and skill bonuses.
 - `.agents/skills/`: Specialized instructions for AI sub-agents.
+
+---
+
+## Current Status & Deployments
+
+### 🌍 Deployment Configuration
+- **Frontend (Vercel)**: `https://life-rpg-web-web-k41j.vercel.app`
+- **Backend (Render)**: `https://life-rpg-web.onrender.com`
+- **Database (Supabase)**: Persistent schema configuration.
+
+### 🛠️ Recent Fixes & Modifications
+1. **Next.js & Vercel Compatibility (Next.js 16)**:
+   - Configured `next.config.ts` to support environment-aware `turbopack.root` (avoiding local paths crash on Vercel).
+   - Removed unsupported `eslint` key in `nextConfig`.
+   - Setup `vercel.json` and removed `package-lock.json` from git to fix platform-specific native binary compilation issues on Linux (errors on `lightningcss` and `@tailwindcss/oxide`).
+2. **CORS & TS Config**:
+   - Added support in backend `main.ts` for multiple comma-separated allowed origins (supporting local dev `localhost:3000` and Vercel production URL).
+   - Fixed missing types inside `main.ts` CORS callback to comply with TypeScript strict mode.
+3. **Stat Points Allocation Fix**:
+   - Resolved a database query bug in `allocateStats` (`player.service.ts` line 1076): the code was filtering on `id` instead of the actual primary key `user_id` on the `character_stats` table. Corrected to `.eq('user_id', userId)`.
