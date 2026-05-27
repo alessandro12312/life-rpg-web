@@ -103,6 +103,7 @@ export function Sidebar() {
     username,
     currentStreak,
     logout,
+    avatarId,
   } = usePlayerStore();
 
   React.useEffect(() => {
@@ -182,7 +183,16 @@ export function Sidebar() {
 
               <div className="flex items-center gap-3 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-surface-border border border-primary/40 flex items-center justify-center shadow-md relative overflow-hidden shrink-0">
-                  <User className="w-5 h-5 text-primary" />
+                  {mounted && avatarId ? (
+                    <img
+                      src={`/avatars/${avatarId}.png`}
+                      className="w-full h-full object-cover"
+                      alt="Avatar"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <User className="w-5 h-5 text-primary" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-sm truncate text-foreground/90">
@@ -229,8 +239,17 @@ export function Sidebar() {
                 className="w-10 h-10 rounded-full bg-surface-border border border-primary/40 flex items-center justify-center cursor-pointer relative shadow-md"
                 title={`${username} | Level ${level}`}
               >
-                <User className="w-5 h-5 text-primary" />
-                <span className="absolute -bottom-1 -right-1 bg-primary text-[#09090b] text-[9px] font-bold px-1 rounded">
+                {mounted && avatarId ? (
+                  <img
+                    src={`/avatars/${avatarId}.png`}
+                    className="w-full h-full object-cover rounded-full"
+                    alt="Avatar"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : (
+                  <User className="w-5 h-5 text-primary" />
+                )}
+                <span className="absolute -bottom-1 -right-1 bg-primary text-[#09090b] text-[9px] font-bold px-1 rounded z-10">
                   {level}
                 </span>
               </div>

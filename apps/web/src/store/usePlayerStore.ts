@@ -21,6 +21,7 @@ interface PlayerState {
     currentStreak: number;
     highestStreak: number;
     statPoints: number;
+    avatarId: string | null;
     setAuth: (userId: string, username: string) => void;
     initStats: (
         level: number,
@@ -29,7 +30,8 @@ interface PlayerState {
         stats?: PlayerStats,
         currentStreak?: number,
         highestStreak?: number,
-        statPoints?: number
+        statPoints?: number,
+        avatarId?: string | null
     ) => void;
     addXP: (amount: number) => void;
     resetStats: () => void;
@@ -51,6 +53,7 @@ export const usePlayerStore = create<PlayerState>()(
             currentStreak: 0,
             highestStreak: 0,
             statPoints: 0,
+            avatarId: null,
 
             setAuth: (userId: string, username: string) => set({ userId, username }),
 
@@ -61,7 +64,8 @@ export const usePlayerStore = create<PlayerState>()(
                 stats?: PlayerStats,
                 currentStreak?: number,
                 highestStreak?: number,
-                statPoints?: number
+                statPoints?: number,
+                avatarId?: string | null
             ) =>
                 set((state) => ({
                     level,
@@ -71,6 +75,7 @@ export const usePlayerStore = create<PlayerState>()(
                     currentStreak: currentStreak ?? state.currentStreak,
                     highestStreak: highestStreak ?? state.highestStreak,
                     statPoints: statPoints ?? state.statPoints,
+                    avatarId: avatarId !== undefined ? avatarId : state.avatarId,
                 })),
 
             addXP: (amount: number) => set((state) => {
@@ -94,14 +99,15 @@ export const usePlayerStore = create<PlayerState>()(
                 };
             }),
 
-            resetStats: () => set({ level: 1, currentXP: 0, xpToNextLevel: 1000, statPoints: 0 }),
+            resetStats: () => set({ level: 1, currentXP: 0, xpToNextLevel: 1000, statPoints: 0, avatarId: null }),
 
             completeOnboarding: () => set({ isOnboarded: true }),
 
             logout: () => set({ 
                 level: 1, currentXP: 0, xpToNextLevel: 1000, 
                 stats: { intelligence: 1, strength: 1, endurance: 1, discipline: 1, focus: 1, knowledge: 1, health: 1 },
-                userId: null, username: null, isOnboarded: false, currentStreak: 0, highestStreak: 0, statPoints: 0
+                userId: null, username: null, isOnboarded: false, currentStreak: 0, highestStreak: 0, statPoints: 0,
+                avatarId: null
             })
         }),
         {

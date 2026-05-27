@@ -170,7 +170,7 @@ export default function OnboardingPage() {
             if (res.ok) {
                 const data = await res.json();
                 const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-                initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak);
+                initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, undefined, data.avatar_id);
                 completeOnboarding();
                 router.push("/");
             }

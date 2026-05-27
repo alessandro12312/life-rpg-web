@@ -73,7 +73,9 @@ export function QuickLogger() {
           data.xp_to_next,
           pStats,
           data.current_streak,
-          data.highest_streak
+          data.highest_streak,
+          undefined,
+          data.avatar_id
         );
 
         setSuccess(true);

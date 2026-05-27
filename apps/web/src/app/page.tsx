@@ -14,11 +14,10 @@ import { BossTracker } from "@/components/dashboard/BossTracker";
 import { BuffsTracker } from "@/components/dashboard/BuffsTracker";
 
 export default function TavernDashboard() {
-  const { currentXP, xpToNextLevel, level, username, stats, userId, currentStreak, statPoints } = usePlayerStore();
+  const { currentXP, xpToNextLevel, level, username, stats, userId, currentStreak, statPoints, avatarId } = usePlayerStore();
   const [mounted, setMounted] = useState(false);
   const [characterClass, setCharacterClass] = useState("Novice");
   const [characterRace, setCharacterRace] = useState("Umano");
-  const [avatarId, setAvatarId] = useState<string | null>(null);
   const [completingQuest, setCompletingQuest] = useState<number | null>(null);
   const [completedQuests, setCompletedQuests] = useState<number[]>([]);
   const [statView, setStatView] = useState<'chart' | 'table'>('chart');
@@ -70,10 +69,9 @@ export default function TavernDashboard() {
           }
 
           const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-          usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points);
+          usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points, data.avatar_id);
           setCharacterClass(data.class_name || "Novice");
           setCharacterRace(data.race || "Umano");
-          setAvatarId(data.avatar_id || null);
         } else {
           // Player missing in backend, assume new account
           router.push("/onboarding");
@@ -117,7 +115,7 @@ export default function TavernDashboard() {
       if (res.ok) {
         const data = await res.json();
         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points);
+        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points, data.avatar_id);
       } else {
         const err = await res.json();
         alert(err.message || "Errore durante l'allocazione dei punti");
@@ -162,7 +160,7 @@ export default function TavernDashboard() {
       if (res.ok) {
         const data = await res.json();
         const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points);
+        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points, data.avatar_id);
         setCompletedQuests(prev => [...prev, questId]);
       }
     } catch (e) {
@@ -218,7 +216,7 @@ export default function TavernDashboard() {
                     src={`/avatars/${avatarId}.png`}
                     className="w-full h-full object-cover"
                     alt="Avatar"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; setAvatarId(null); }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; usePlayerStore.setState({ avatarId: null }); }}
                   />
                 </>
               ) : (
