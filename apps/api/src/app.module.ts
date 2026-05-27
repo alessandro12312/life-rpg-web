@@ -15,11 +15,11 @@ import { BattleModule } from './battle/battle.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // Rate Limiting: max 20 richieste per IP ogni 60 secondi
+    // Rate Limiting: max 100 richieste per IP ogni 60 secondi (ottimizzato per il polling di gioco)
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 20,
+        limit: 100,
       },
     ]),
     SupabaseModule,

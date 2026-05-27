@@ -89,8 +89,8 @@ export class BattleController {
 
   /** Get battle log */
   @Get(':id/log')
-  async getBattleLog(@Param('id') id: string) {
-    return this.battleService.getBattleLog(id);
+  async getBattleLog(@Req() req: any, @Param('id') id: string) {
+    return this.battleService.getBattleLog(id, req.user.id);
   }
 
   /** Abandon a battle */

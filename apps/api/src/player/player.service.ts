@@ -874,6 +874,18 @@ export class PlayerService {
       avatarId?: string;
     },
   ) {
+    const { data: userRow } = await this.supabase
+      .getClient()
+      .from('users')
+      .select('class_name, xp_current')
+      .eq('id', userId)
+      .single();
+
+    if (!userRow) throw new NotFoundException('Player not found');
+    if (userRow.class_name !== 'Novice') {
+      throw new BadRequestException('Player has already completed onboarding');
+    }
+
     let intelligenceBonus = 0,
       disciplineBonus = 0,
       strengthBonus = 0,
@@ -967,12 +979,6 @@ export class PlayerService {
     }
 
     const avatarId = payload.avatarId || `${race}-${cls}`;
-    const { data: userRow } = await this.supabase
-      .getClient()
-      .from('users')
-      .select('xp_current')
-      .eq('id', userId)
-      .single();
     if (userRow) {
       await this.supabase
         .getClient()

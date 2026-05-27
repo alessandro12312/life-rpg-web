@@ -111,37 +111,40 @@ CREATE TABLE IF NOT EXISTS public.goals (
 -- Ogni utente può leggere/scrivere SOLO le proprie righe.
 -- ═══════════════════════════════════════════════════════════════════════
 
--- Users: un utente può vedere e modificare solo se stesso
+-- Users: un utente può vedere solo se stesso (le modifiche avvengono solo tramite il backend)
 DROP POLICY IF EXISTS "Users: own read" ON public.users;
 CREATE POLICY "Users: own read" ON public.users FOR SELECT USING (auth.uid() = id);
 DROP POLICY IF EXISTS "Users: own write" ON public.users;
-CREATE POLICY "Users: own write" ON public.users FOR UPDATE USING (auth.uid() = id);
 DROP POLICY IF EXISTS "Users: insert self" ON public.users;
-CREATE POLICY "Users: insert self" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Character Stats
 DROP POLICY IF EXISTS "Stats: own access" ON public.character_stats;
-CREATE POLICY "Stats: own access" ON public.character_stats FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Stats: own read" ON public.character_stats;
+CREATE POLICY "Stats: own read" ON public.character_stats FOR SELECT USING (auth.uid() = user_id);
 
 -- Activity Logs
 DROP POLICY IF EXISTS "Logs: own access" ON public.activity_logs;
-CREATE POLICY "Logs: own access" ON public.activity_logs FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Logs: own read" ON public.activity_logs;
+CREATE POLICY "Logs: own read" ON public.activity_logs FOR SELECT USING (auth.uid() = user_id);
 
--- Skills (catalogo leggibile da tutti, insert solo per se stessi)
+-- Skills (catalogo leggibile da tutti)
 DROP POLICY IF EXISTS "Enable all for public" ON public.skills;
 CREATE POLICY "Skills: public read" ON public.skills FOR SELECT USING (true);
 
 -- User Skills
 DROP POLICY IF EXISTS "Enable all for public" ON public.user_skills;
-CREATE POLICY "User Skills: own access" ON public.user_skills FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "User Skills: own read" ON public.user_skills;
+CREATE POLICY "User Skills: own read" ON public.user_skills FOR SELECT USING (auth.uid() = user_id);
 
 -- Achievements
 DROP POLICY IF EXISTS "Enable all for public" ON public.achievements;
-CREATE POLICY "Achievements: own access" ON public.achievements FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Achievements: own read" ON public.achievements;
+CREATE POLICY "Achievements: own read" ON public.achievements FOR SELECT USING (auth.uid() = user_id);
 
 -- Goals
 DROP POLICY IF EXISTS "Enable all for public" ON public.goals;
-CREATE POLICY "Goals: own access" ON public.goals FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Goals: own read" ON public.goals;
+CREATE POLICY "Goals: own read" ON public.goals FOR SELECT USING (auth.uid() = user_id);
 
 -- MVP Seed Skills
 INSERT INTO public.skills (id, name, description, required_level, cost_in_sp, category) 
@@ -172,16 +175,12 @@ CREATE TABLE IF NOT EXISTS public.sanctum_lobbies (
 
 ALTER TABLE public.sanctum_lobbies ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Enable all for public" ON public.sanctum_lobbies;
--- Le lobby sono leggibili da ogni utente autenticato (per la lista)
+-- Le lobby sono leggibili da ogni utente autenticato (le modifiche avvengono solo tramite il backend)
 DROP POLICY IF EXISTS "Lobbies: auth read" ON public.sanctum_lobbies;
 CREATE POLICY "Lobbies: auth read" ON public.sanctum_lobbies FOR SELECT USING (auth.uid() IS NOT NULL);
--- Solo l'host può inserire/modificare/cancellare la propria lobby
 DROP POLICY IF EXISTS "Lobbies: host write" ON public.sanctum_lobbies;
-CREATE POLICY "Lobbies: host write" ON public.sanctum_lobbies FOR INSERT WITH CHECK (auth.uid() = host_id);
 DROP POLICY IF EXISTS "Lobbies: host update" ON public.sanctum_lobbies;
-CREATE POLICY "Lobbies: host update" ON public.sanctum_lobbies FOR UPDATE USING (auth.uid() = host_id);
 DROP POLICY IF EXISTS "Lobbies: host delete" ON public.sanctum_lobbies;
-CREATE POLICY "Lobbies: host delete" ON public.sanctum_lobbies FOR DELETE USING (auth.uid() = host_id);
 
 -- Enable Realtime (idempotent)
 DO $$ BEGIN
@@ -230,28 +229,20 @@ CREATE TABLE IF NOT EXISTS public.guild_quests (
     UNIQUE(guild_id, week_start, category)
 );
 
--- RLS: guilds
+-- RLS: guilds (le modifiche avvengono solo tramite il backend)
 ALTER TABLE public.guilds ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Guilds: auth read" ON public.guilds;
 CREATE POLICY "Guilds: auth read" ON public.guilds FOR SELECT USING (auth.uid() IS NOT NULL);
 DROP POLICY IF EXISTS "Guilds: leader insert" ON public.guilds;
-CREATE POLICY "Guilds: leader insert" ON public.guilds FOR INSERT WITH CHECK (auth.uid() = leader_id);
 DROP POLICY IF EXISTS "Guilds: leader update" ON public.guilds;
-CREATE POLICY "Guilds: leader update" ON public.guilds FOR UPDATE USING (auth.uid() = leader_id);
 DROP POLICY IF EXISTS "Guilds: leader delete" ON public.guilds;
-CREATE POLICY "Guilds: leader delete" ON public.guilds FOR DELETE USING (auth.uid() = leader_id);
 
--- RLS: guild_members
+-- RLS: guild_members (le modifiche avvengono solo tramite il backend)
 ALTER TABLE public.guild_members ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "GuildMembers: auth read" ON public.guild_members;
 CREATE POLICY "GuildMembers: auth read" ON public.guild_members FOR SELECT USING (auth.uid() IS NOT NULL);
 DROP POLICY IF EXISTS "GuildMembers: self insert" ON public.guild_members;
-CREATE POLICY "GuildMembers: self insert" ON public.guild_members FOR INSERT WITH CHECK (auth.uid() = user_id);
 DROP POLICY IF EXISTS "GuildMembers: self or leader delete" ON public.guild_members;
-CREATE POLICY "GuildMembers: self or leader delete" ON public.guild_members FOR DELETE USING (
-    auth.uid() = user_id OR
-    auth.uid() IN (SELECT leader_id FROM public.guilds WHERE id = guild_id)
-);
 
 -- RLS: guild_quests (gestite dal backend via Service Role, ma leggibili dai membri)
 ALTER TABLE public.guild_quests ENABLE ROW LEVEL SECURITY;
@@ -407,16 +398,13 @@ CREATE INDEX IF NOT EXISTS idx_bosses_creator ON public.bosses (creator_id);
 -- RLS: Battle System
 -- ═══════════════════════════════════════════════════════════════════════
 
--- Bosses: readable by all authenticated users
+-- Bosses: readable by all authenticated users (le modifiche avvengono solo tramite il backend)
 ALTER TABLE public.bosses ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Bosses: auth read" ON public.bosses;
 CREATE POLICY "Bosses: auth read" ON public.bosses FOR SELECT USING (auth.uid() IS NOT NULL);
 DROP POLICY IF EXISTS "Bosses: creator insert" ON public.bosses;
-CREATE POLICY "Bosses: creator insert" ON public.bosses FOR INSERT WITH CHECK (auth.uid() = creator_id);
 DROP POLICY IF EXISTS "Bosses: creator update" ON public.bosses;
-CREATE POLICY "Bosses: creator update" ON public.bosses FOR UPDATE USING (auth.uid() = creator_id);
 DROP POLICY IF EXISTS "Bosses: creator delete" ON public.bosses;
-CREATE POLICY "Bosses: creator delete" ON public.bosses FOR DELETE USING (auth.uid() = creator_id);
 
 -- Battles: readable by participants, writable by backend (service role)
 ALTER TABLE public.battles ENABLE ROW LEVEL SECURITY;
@@ -425,34 +413,30 @@ CREATE POLICY "Battles: participant read" ON public.battles FOR SELECT USING (
     auth.uid() IN (SELECT user_id FROM public.battle_participants WHERE battle_id = id)
 );
 DROP POLICY IF EXISTS "Battles: auth insert" ON public.battles;
-CREATE POLICY "Battles: auth insert" ON public.battles FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 DROP POLICY IF EXISTS "Battles: auth update" ON public.battles;
-CREATE POLICY "Battles: auth update" ON public.battles FOR UPDATE USING (auth.uid() IS NOT NULL);
 
--- Battle Participants: readable by same-battle participants
+-- Battle Participants: readable by same-battle participants, writable by backend (service role)
 ALTER TABLE public.battle_participants ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "BattleParticipants: battle read" ON public.battle_participants;
 CREATE POLICY "BattleParticipants: battle read" ON public.battle_participants FOR SELECT USING (
     auth.uid() IN (SELECT bp.user_id FROM public.battle_participants bp WHERE bp.battle_id = battle_id)
 );
 DROP POLICY IF EXISTS "BattleParticipants: self insert" ON public.battle_participants;
-CREATE POLICY "BattleParticipants: self insert" ON public.battle_participants FOR INSERT WITH CHECK (auth.uid() = user_id);
 DROP POLICY IF EXISTS "BattleParticipants: auth update" ON public.battle_participants;
-CREATE POLICY "BattleParticipants: auth update" ON public.battle_participants FOR UPDATE USING (auth.uid() IS NOT NULL);
 
--- Battle Logs: readable by battle participants
+-- Battle Logs: readable by battle participants, writable by backend (service role)
 ALTER TABLE public.battle_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "BattleLogs: participant read" ON public.battle_logs;
 CREATE POLICY "BattleLogs: participant read" ON public.battle_logs FOR SELECT USING (
     auth.uid() IN (SELECT user_id FROM public.battle_participants WHERE battle_id = battle_logs.battle_id)
 );
 DROP POLICY IF EXISTS "BattleLogs: auth insert" ON public.battle_logs;
-CREATE POLICY "BattleLogs: auth insert" ON public.battle_logs FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
--- Player Inventory: full access to own items
+-- Player Inventory: readable by own user (le modifiche avvengono solo tramite il backend)
 ALTER TABLE public.player_inventory ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Inventory: own access" ON public.player_inventory;
-CREATE POLICY "Inventory: own access" ON public.player_inventory FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Inventory: own read" ON public.player_inventory;
+CREATE POLICY "Inventory: own read" ON public.player_inventory FOR SELECT USING (auth.uid() = user_id);
 
 -- Realtime for battles and battle_participants
 DO $$ BEGIN

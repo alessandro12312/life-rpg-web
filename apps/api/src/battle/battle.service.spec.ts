@@ -370,4 +370,30 @@ describe('BattleService', () => {
       expect(hasBossAttack).toBe(true);
     });
   });
+
+  describe('getBattleState & getBattleLog Authorization', () => {
+    it('should throw ForbiddenException in getBattleState if requesting user is not a participant', async () => {
+      await expect(
+        service.getBattleState('battle-123', 'non-existent-player'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should successfully return state in getBattleState if requesting user is a participant', async () => {
+      const result = await service.getBattleState('battle-123', 'player-A');
+      expect(result).toBeDefined();
+      expect(result.battle.id).toBe('battle-123');
+    });
+
+    it('should throw ForbiddenException in getBattleLog if requesting user is not a participant', async () => {
+      await expect(
+        service.getBattleLog('battle-123', 'non-existent-player'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should successfully return log in getBattleLog if requesting user is a participant', async () => {
+      const result = await service.getBattleLog('battle-123', 'player-A');
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
 });

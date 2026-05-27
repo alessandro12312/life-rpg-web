@@ -625,6 +625,17 @@ let PlayerService = class PlayerService {
         return this.getPlayerStats(userId);
     }
     async onboardPlayer(userId, payload) {
+        const { data: userRow } = await this.supabase
+            .getClient()
+            .from('users')
+            .select('class_name, xp_current')
+            .eq('id', userId)
+            .single();
+        if (!userRow)
+            throw new common_1.NotFoundException('Player not found');
+        if (userRow.class_name !== 'Novice') {
+            throw new common_1.BadRequestException('Player has already completed onboarding');
+        }
         let intelligenceBonus = 0, disciplineBonus = 0, strengthBonus = 0, enduranceBonus = 0, focusBonus = 0, knowledgeBonus = 0;
         if (payload.studyHoursWeekly > 20) {
             intelligenceBonus += 2.0;
@@ -704,12 +715,6 @@ let PlayerService = class PlayerService {
                 .eq('user_id', userId);
         }
         const avatarId = payload.avatarId || `${race}-${cls}`;
-        const { data: userRow } = await this.supabase
-            .getClient()
-            .from('users')
-            .select('xp_current')
-            .eq('id', userId)
-            .single();
         if (userRow) {
             await this.supabase
                 .getClient()
@@ -777,7 +782,7 @@ let PlayerService = class PlayerService {
         const { error: statUpdateError } = await client
             .from('character_stats')
             .update({ [payload.stat]: newVal })
-            .eq('id', userId);
+            .eq('user_id', userId);
         if (statUpdateError)
             throw new common_1.InternalServerErrorException('Error updating stats');
         return this.getPlayerStats(userId);

@@ -474,7 +474,10 @@ export class BattleService {
     const currentPlayer = (participants || []).find(
       (p: any) => p.user_id === userId,
     );
-    const className = currentPlayer?.users?.class_name || 'warrior';
+    if (!currentPlayer) {
+      throw new ForbiddenException('Non partecipi a questa battaglia');
+    }
+    const className = currentPlayer.users?.class_name || 'warrior';
     const availableSkills = getSkillsForClass(className);
 
     // Get player inventory
@@ -1255,9 +1258,23 @@ export class BattleService {
   }
 
   /** Get battle log */
-  async getBattleLog(battleId: string) {
-    const { data, error } = await this.supabase
-      .getClient()
+  async getBattleLog(battleId: string, userId: string) {
+    const client = this.supabase.getClient();
+
+    // Verify requesting user is a participant
+    const { data: participants } = await client
+      .from('battle_participants')
+      .select('user_id')
+      .eq('battle_id', battleId);
+
+    const isParticipant = (participants || []).some(
+      (p: any) => p.user_id === userId,
+    );
+    if (!isParticipant) {
+      throw new ForbiddenException('Non partecipi a questa battaglia');
+    }
+
+    const { data, error } = await client
       .from('battle_logs')
       .select('*')
       .eq('battle_id', battleId)

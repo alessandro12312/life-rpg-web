@@ -43,7 +43,7 @@ class MockSupabaseQuery {
         this.data = [...this.data, payload];
       }
     }
-    return Promise.resolve({ error: null });
+    return this;
   });
 
   delete = jest.fn().mockReturnThis();
@@ -207,6 +207,50 @@ describe('PlayerService', () => {
       skillsQuery.data = [];
 
       await expect(service.unlockSkill(userId, 'int_1')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('onboardPlayer', () => {
+    const userId = 'user-uuid-123';
+
+    it('should successfully onboard player when className is Novice', async () => {
+      userQuery.data = { class_name: 'Novice', xp_current: 0 };
+      statsQuery.data = { intelligence: 1, strength: 1, endurance: 1, discipline: 1, focus: 1, knowledge: 1, health: 1 };
+
+      // mock select for stats at the end of onboarding (in getPlayerStats)
+      userQuery.single = jest.fn()
+        .mockResolvedValueOnce({ data: { class_name: 'Novice', xp_current: 0 }, error: null }) // select users in onboarding
+        .mockResolvedValueOnce({ data: { intelligence: 1 }, error: null }) // select character_stats in onboarding
+        .mockResolvedValueOnce({ data: { id: userId, level: 1 }, error: null }); // getPlayerStats return
+
+      const result = await service.onboardPlayer(userId, {
+        studyHoursWeekly: 10,
+        workoutHoursWeekly: 5,
+        race: 'Elf',
+        className: 'Mage',
+      });
+
+      expect(userQuery.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          class_name: 'Mage',
+          race: 'Elf',
+          xp_current: 500,
+        })
+      );
+      expect(result).toBeDefined();
+    });
+
+    it('should throw BadRequestException if user is already onboarded', async () => {
+      userQuery.data = { class_name: 'Mage', xp_current: 500 };
+
+      await expect(
+        service.onboardPlayer(userId, {
+          studyHoursWeekly: 10,
+          workoutHoursWeekly: 5,
+          race: 'Elf',
+          className: 'Mage',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
