@@ -53,7 +53,13 @@ export declare class PlayerService {
         xp_reward?: number;
     }): Promise<any>;
     updateGoalProgress(userId: string, category: string, minutes: number, currentLevel: number, currentXP: number, xpToNext: number): Promise<void>;
-    getActivityHistory(userId: string, limit?: number): Promise<any[]>;
+    getActivityHistory(userId: string, page?: number, limit?: number): Promise<{
+        data: any[];
+        total: number;
+        page: number;
+        limit: number;
+        hasMore: boolean;
+    }>;
     logActivity(userId: string, payload: {
         category: 'STUDY' | 'WORKOUT' | 'MIXED' | 'CUSTOM';
         custom_name?: string;

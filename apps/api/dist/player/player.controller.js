@@ -32,8 +32,10 @@ let PlayerController = class PlayerController {
     async logActivity(req, body) {
         return this.playerService.logActivity(req.user.id, body);
     }
-    async getActivityHistory(req) {
-        return this.playerService.getActivityHistory(req.user.id);
+    async getActivityHistory(req, page, limit) {
+        const pageNum = parseInt(page || '1', 10);
+        const limitNum = parseInt(limit || '10', 10);
+        return this.playerService.getActivityHistory(req.user.id, pageNum, limitNum);
     }
     async onboardPlayer(req, body) {
         return this.playerService.onboardPlayer(req.user.id, body);
@@ -76,8 +78,10 @@ __decorate([
 __decorate([
     (0, common_1.Get)('activities'),
     __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], PlayerController.prototype, "getActivityHistory", null);
 __decorate([

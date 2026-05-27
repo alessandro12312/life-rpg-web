@@ -437,17 +437,26 @@ let PlayerService = class PlayerService {
             }
         }
     }
-    async getActivityHistory(userId, limit = 50) {
-        const { data, error } = await this.supabase
-            .getClient()
+    async getActivityHistory(userId, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+        const client = this.supabase.getClient();
+        const { data, error, count } = await client
             .from('activity_logs')
-            .select('*')
+            .select('*', { count: 'exact' })
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
-            .limit(limit);
+            .range(offset, offset + limit - 1);
         if (error)
             throw new common_1.InternalServerErrorException('Errore nel recupero della cronologia attività');
-        return data ?? [];
+        const loadedCount = offset + (data?.length || 0);
+        const hasMore = loadedCount < (count ?? 0);
+        return {
+            data: data ?? [],
+            total: count ?? 0,
+            page,
+            limit,
+            hasMore,
+        };
     }
     async logActivity(userId, payload) {
         const intensity = payload.intensity_multiplier || 1.0;

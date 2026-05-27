@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Query } from '@nestjs/common';
 import { PlayerService } from './player.service';
 import { LogActivityDto } from './dto/log-activity.dto';
 import { OnboardPlayerDto } from './dto/onboard-player.dto';
@@ -26,8 +26,14 @@ export class PlayerController {
   }
 
   @Get('activities')
-  async getActivityHistory(@Req() req: any) {
-    return this.playerService.getActivityHistory(req.user.id);
+  async getActivityHistory(
+    @Req() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = parseInt(page || '1', 10);
+    const limitNum = parseInt(limit || '10', 10);
+    return this.playerService.getActivityHistory(req.user.id, pageNum, limitNum);
   }
 
   @Post('onboard')

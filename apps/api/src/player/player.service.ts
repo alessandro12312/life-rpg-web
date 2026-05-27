@@ -554,20 +554,36 @@ export class PlayerService {
   }
 
   // ── Activity History ──────────────────────────────────────────────────────
-  async getActivityHistory(userId: string, limit: number = 50) {
-    const { data, error } = await this.supabase
-      .getClient()
+  async getActivityHistory(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const offset = (page - 1) * limit;
+    const client = this.supabase.getClient();
+
+    const { data, error, count } = await client
       .from('activity_logs')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     if (error)
       throw new InternalServerErrorException(
         'Errore nel recupero della cronologia attività',
       );
-    return data ?? [];
+
+    const loadedCount = offset + (data?.length || 0);
+    const hasMore = loadedCount < (count ?? 0);
+
+    return {
+      data: data ?? [],
+      total: count ?? 0,
+      page,
+      limit,
+      hasMore,
+    };
   }
 
   // ── Log Activity ──────────────────────────────────────────────────────────

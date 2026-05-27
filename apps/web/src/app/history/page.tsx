@@ -10,6 +10,7 @@ import { API_URL } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ActivityLog {
     id: number;
@@ -25,6 +26,9 @@ export default function TheChronicles() {
     const { userId } = usePlayerStore();
     const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -35,12 +39,14 @@ export default function TheChronicles() {
             usePlayerStore.getState().setAuth(user.id, user.user_metadata?.username || user.email?.split("@")[0] || "Hero");
 
             try {
-                const res = await fetch(`${API_URL}/player/activities`, {
+                const res = await fetch(`${API_URL}/player/activities?page=1&limit=10`, {
                     headers: { 'Authorization': `Bearer ${session.access_token}` }
                 });
                 if (res.ok) {
-                    const data = await res.json();
-                    setActivities(data);
+                    const result = await res.json();
+                    setActivities(result.data);
+                    setHasMore(result.hasMore);
+                    setPage(1);
                 }
             } catch (e) {
                 console.error("Failed to fetch chronicles", e);
@@ -51,6 +57,29 @@ export default function TheChronicles() {
         init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
+
+    const loadMore = async () => {
+        if (loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+            const nextPage = page + 1;
+            const res = await fetch(`${API_URL}/player/activities?page=${nextPage}&limit=10`, {
+                headers: { 'Authorization': `Bearer ${session.access_token}` }
+            });
+            if (res.ok) {
+                const result = await res.json();
+                setActivities(prev => [...prev, ...result.data]);
+                setHasMore(result.hasMore);
+                setPage(nextPage);
+            }
+        } catch (e) {
+            console.error("Failed to load more chronicles", e);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     const getCategoryIcon = (category: string) => {
         switch (category) {
@@ -146,6 +175,22 @@ export default function TheChronicles() {
                                 </div>
                             </GlassCard>
                         ))
+                    )}
+
+                    {hasMore && (
+                        <div className="flex justify-center pt-6 pb-4">
+                            <Button 
+                                onClick={loadMore} 
+                                disabled={loadingMore}
+                                className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 font-semibold px-8 py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)] cursor-pointer"
+                            >
+                                {loadingMore ? (
+                                    <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    "Carica Altre Imprese 📜"
+                                )}
+                            </Button>
+                        </div>
                     )}
                 </div>
             </div>
