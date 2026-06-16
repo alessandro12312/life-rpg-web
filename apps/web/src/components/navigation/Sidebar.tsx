@@ -20,6 +20,7 @@ import {
   Flame,
 } from "lucide-react";
 import { usePlayerStore } from "@/store/usePlayerStore";
+import { useAnimationStore } from "@/store/useAnimationStore";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +96,15 @@ export function Sidebar() {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
+  const [xpShimmer, setXpShimmer] = React.useState(false);
+  const pendingEvent = useAnimationStore((s) => s.pendingEvent);
+
+  React.useEffect(() => {
+    if (!pendingEvent) return;
+    setXpShimmer(true);
+    const t = setTimeout(() => setXpShimmer(false), 2000);
+    return () => clearTimeout(t);
+  }, [pendingEvent?.id]);
 
   const {
     currentXP,
@@ -217,13 +227,21 @@ export function Sidebar() {
                     {mounted ? Math.floor(currentXP) : 0} / {mounted ? Math.floor(xpToNextLevel) : 1000}
                   </span>
                 </div>
-                <div className="h-1.5 w-full bg-surface-border rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-surface-border rounded-full overflow-hidden relative">
                   <motion.div
-                    initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-primary/70 to-primary rounded-full"
-                  />
+                    transition={{ duration: 1.2, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-primary/70 to-primary rounded-full relative overflow-hidden"
+                  >
+                    {xpShimmer && (
+                      <motion.div
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "200%" }}
+                        transition={{ duration: 0.9, ease: "easeInOut", repeat: 1 }}
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                      />
+                    )}
+                  </motion.div>
                 </div>
               </div>
             </motion.div>

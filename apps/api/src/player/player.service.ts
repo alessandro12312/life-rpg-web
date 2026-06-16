@@ -876,7 +876,13 @@ export class PlayerService {
       custom_name: payload.custom_name,
     });
 
-    return this.getPlayerStats(userId);
+    const playerStats = await this.getPlayerStats(userId);
+    return {
+      ...playerStats,
+      xp_gained: xp_yield,
+      levels_gained,
+      stat_gains: stats_yield,
+    };
   }
 
   // ── Onboarding ────────────────────────────────────────────────────────────

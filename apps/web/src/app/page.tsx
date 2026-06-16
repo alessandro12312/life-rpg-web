@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { User, Swords, BookOpen, Clock, Activity, Flame } from "lucide-react";
 import { usePlayerStore } from "@/store/usePlayerStore";
+import { applyActivityResponse } from "@/lib/triggerActivityAnimation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -223,9 +224,8 @@ export default function TavernDashboard() {
       });
       if (res.ok) {
         const data = await res.json();
-        const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-        usePlayerStore.getState().initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, data.stat_points, data.avatar_id);
-        
+        applyActivityResponse(data);
+
         // Save to localStorage
         const today = new Date();
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;

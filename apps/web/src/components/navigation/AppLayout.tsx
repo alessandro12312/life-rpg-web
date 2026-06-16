@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "./Sidebar";
 import { MobileHeader } from "./MobileHeader";
+import { AnimationLayer } from "@/components/AnimationLayer";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -38,6 +39,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Background ambient radial glow */}
       <div className="absolute inset-0 bg-[#09090b] -z-10 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--color-surface)/40,_var(--color-background)_80%)] -z-10 pointer-events-none" />
+
+      {/* Global animation overlays */}
+      <AnimationLayer />
 
       {/* Desktop Sidebar Navigation */}
       <Sidebar />

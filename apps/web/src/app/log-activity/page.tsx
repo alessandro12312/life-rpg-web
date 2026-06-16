@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { usePlayerStore } from "@/store/usePlayerStore";
+import { applyActivityResponse } from "@/lib/triggerActivityAnimation";
 import { Swords, BookOpen, Activity, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -13,7 +14,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 
 export default function LogActivityPage() {
     const router = useRouter();
-    const { userId, initStats } = usePlayerStore();
+    const { userId } = usePlayerStore();
     const [loading, setLoading] = useState(false);
 
     const [form, setForm] = useState({
@@ -54,8 +55,7 @@ export default function LogActivityPage() {
 
             if (res.ok) {
                 const data = await res.json();
-                const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-                initStats(data.level, data.xp_current, data.xp_to_next, pStats, data.current_streak, data.highest_streak, undefined, data.avatar_id);
+                applyActivityResponse(data);
                 router.push("/");
             }
         } catch (error) {

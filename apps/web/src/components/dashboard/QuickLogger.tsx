@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swords, BookOpen, Activity, Brain, Heart, Check, Flame } from "lucide-react";
 import { usePlayerStore } from "@/store/usePlayerStore";
+import { applyActivityResponse } from "@/lib/triggerActivityAnimation";
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -26,7 +27,7 @@ const PRESETS: ActivityPreset[] = [
 ];
 
 export function QuickLogger() {
-  const { userId, initStats } = usePlayerStore();
+  const { userId } = usePlayerStore();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [selectedPresetIdx, setSelectedPresetIdx] = useState<number>(0);
@@ -64,20 +65,7 @@ export function QuickLogger() {
 
       if (res.ok) {
         const data = await res.json();
-        const pStats = Array.isArray(data.character_stats) ? data.character_stats[0] : data.character_stats;
-        
-        // Update global Zustand store
-        initStats(
-          data.level,
-          data.xp_current,
-          data.xp_to_next,
-          pStats,
-          data.current_streak,
-          data.highest_streak,
-          undefined,
-          data.avatar_id
-        );
-
+        applyActivityResponse(data);
         setSuccess(true);
         setCustomTitle("");
         setTimeout(() => setSuccess(false), 3000);
