@@ -179,6 +179,24 @@ export class PlayerService {
     return user;
   }
 
+  async checkUsernameAvailability(
+    username: string,
+  ): Promise<{ available: boolean }> {
+    const { data, error } = await this.supabase
+      .getClient()
+      .from('users')
+      .select('id')
+      .ilike('username', username)
+      .maybeSingle();
+
+    if (error)
+      throw new InternalServerErrorException(
+        'Errore nella verifica dello username',
+      );
+
+    return { available: !data };
+  }
+
   // ── Skill Tree ─────────────────────────────────────────────────────────────
   async getPlayerSkills(userId: string): Promise<{ unlockedIds: string[] }> {
     const { data, error } = await this.supabase

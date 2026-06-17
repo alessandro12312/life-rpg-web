@@ -73,15 +73,35 @@ body {
 /* Runic scanlines for high-tier screens */
 .runic-scanlines {
   background: linear-gradient(
-    rgba(18, 16, 32, 0) 50%, 
+    rgba(18, 16, 32, 0) 50%,
     rgba(0, 0, 0, 0.25) 50%
   ), linear-gradient(
-    90deg, 
-    rgba(255, 0, 0, 0.06), 
-    rgba(0, 255, 0, 0.02), 
+    90deg,
+    rgba(255, 0, 0, 0.06),
+    rgba(0, 255, 0, 0.02),
     rgba(0, 0, 255, 0.06)
   );
   background-size: 100% 4px, 6px 100%;
+}
+
+/* Fainter variant for use as an outer atmospheric wrapper (login/auth screens) */
+.runic-scanlines-faint {
+  opacity: 0.4;
+}
+
+/* Gold variant of the retro pixel text glow, for titles matching --primary */
+.retro-text-glow-gold {
+  text-shadow: 0 0 5px rgba(245, 158, 11, 0.8), 2px 2px 0px #000000;
+}
+
+/* Success pulse for card containers (auth success, etc.) */
+@keyframes success-glow {
+  0% { box-shadow: 0 0 0 rgba(0, 240, 255, 0); }
+  50% { box-shadow: 0 0 30px rgba(0, 240, 255, 0.5); }
+  100% { box-shadow: 0 0 0 rgba(0, 240, 255, 0); }
+}
+.card-success-pulse {
+  animation: success-glow 0.6s ease-out;
 }
 
 /* Neon glow utilities */
