@@ -208,10 +208,17 @@ export default function Login() {
     const usernameSeqRef = useRef(0);
     const usernameAbortRef = useRef<AbortController | null>(null);
 
-    // Mouse-follow 3D tilt on the card
+    // Mouse-follow 3D tilt on the card. Freezes flat over interactive
+    // elements so the tilt never shifts the target out from under the cursor
+    // while aiming for an input/button.
     const handleCardMouseMove = useCallback(
         (e: React.MouseEvent<HTMLDivElement>) => {
             if (prefersReducedMotion) return;
+            const target = e.target as HTMLElement;
+            if (target.closest("input, button, label, textarea, a")) {
+                setTilt({ rotateX: 0, rotateY: 0 });
+                return;
+            }
             const card = cardRef.current;
             if (!card) return;
             const rect = card.getBoundingClientRect();
@@ -219,7 +226,7 @@ export default function Login() {
             const cy = rect.top + rect.height / 2;
             const dx = (e.clientX - cx) / (rect.width / 2);
             const dy = (e.clientY - cy) / (rect.height / 2);
-            const maxTilt = 8;
+            const maxTilt = 4;
             setTilt({ rotateX: -dy * maxTilt, rotateY: dx * maxTilt });
         },
         [prefersReducedMotion]
@@ -451,26 +458,28 @@ export default function Login() {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 block">
-                                    Password
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className={`w-full bg-background border rounded-xl px-4 py-3 pr-10 outline-none transition-colors text-sm ${inputBorderClasses(
-                                            passwordValidity
-                                        )}`}
-                                        placeholder="••••••••"
-                                    />
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <FieldStatusIcon validity={passwordValidity} />
+                            {isLogin && (
+                                <div>
+                                    <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 block">
+                                        Password
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="password"
+                                            required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className={`w-full bg-background border rounded-xl px-4 py-3 pr-10 outline-none transition-colors text-sm ${inputBorderClasses(
+                                                passwordValidity
+                                            )}`}
+                                            placeholder="••••••••"
+                                        />
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <FieldStatusIcon validity={passwordValidity} />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
                             <AnimatePresence>
                                 {!isLogin && (
@@ -597,23 +606,45 @@ export default function Login() {
                                                 )}
                                             </AnimatePresence>
                                         </div>
-                                        <div>
-                                            <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 mt-2 block">
-                                                Confirm Password
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="password"
-                                                    required={!isLogin}
-                                                    value={confirmPassword}
-                                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                                    className={`w-full bg-background border rounded-xl px-4 py-3 pr-10 outline-none transition-colors text-sm ${inputBorderClasses(
-                                                        confirmValidity
-                                                    )}`}
-                                                    placeholder="••••••••"
-                                                />
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                    <FieldStatusIcon validity={confirmValidity} />
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 mt-2 block">
+                                                    Password
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="password"
+                                                        required={!isLogin}
+                                                        value={password}
+                                                        onChange={(e) => setPassword(e.target.value)}
+                                                        className={`w-full bg-background border rounded-xl px-4 py-3 pr-8 outline-none transition-colors text-sm ${inputBorderClasses(
+                                                            passwordValidity
+                                                        )}`}
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                        <FieldStatusIcon validity={passwordValidity} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2 mt-2 block">
+                                                    Confirm
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="password"
+                                                        required={!isLogin}
+                                                        value={confirmPassword}
+                                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                                        className={`w-full bg-background border rounded-xl px-4 py-3 pr-8 outline-none transition-colors text-sm ${inputBorderClasses(
+                                                            confirmValidity
+                                                        )}`}
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                        <FieldStatusIcon validity={confirmValidity} />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
