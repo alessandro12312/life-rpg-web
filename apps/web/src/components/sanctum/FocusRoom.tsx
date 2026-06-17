@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, X, Music, CheckCircle, Users, Send, Coffee, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -73,6 +73,34 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
     const stored = window.localStorage.getItem("sanctum_music_volume");
     return stored !== null ? Number(stored) : 0.5;
   });
+
+  // Chime di transizione focus/pausa (generato via Web Audio API, nessun asset esterno)
+  const chimeCtxRef = useRef<AudioContext | null>(null);
+  const prevStatusRef = useRef(initialLobby.status);
+
+  const playTransitionChime = useCallback((kind: "focus" | "break") => {
+    if (typeof window === "undefined" || volume <= 0) return;
+    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return;
+    if (!chimeCtxRef.current) chimeCtxRef.current = new Ctx();
+    const ctx = chimeCtxRef.current;
+    // Note ascendenti per l'inizio del focus, discendenti per l'inizio della pausa
+    const notes = kind === "focus" ? [523.25, 783.99] : [659.25, 440.0];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const startTime = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volume * 0.4, startTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.4);
+    });
+  }, [volume]);
 
   // Fetch Auth globally for beforeunload
   useEffect(() => {
@@ -164,6 +192,20 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
     if (audioRef.current) audioRef.current.volume = volume;
     window.localStorage.setItem("sanctum_music_volume", String(volume));
   }, [volume, selectedTrack]);
+
+  // Suona un chime quando la sessione passa da focus a pausa, e viceversa
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    if (prev === "FOCUSING" && lobby.status === "BREAK") playTransitionChime("break");
+    else if (prev === "BREAK" && lobby.status === "FOCUSING") playTransitionChime("focus");
+    prevStatusRef.current = lobby.status;
+  }, [lobby.status, playTransitionChime]);
+
+  useEffect(() => {
+    return () => {
+      chimeCtxRef.current?.close().catch(() => {});
+    };
+  }, []);
 
   // Supabase Channels Setup
   useEffect(() => {
