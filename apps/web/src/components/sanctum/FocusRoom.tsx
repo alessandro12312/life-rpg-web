@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, X, Music, CheckCircle, Users, Send, Coffee, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, X, Music, CheckCircle, Users, Send, Coffee, Volume2, VolumeX, SkipForward } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { usePlayerStore } from "@/store/usePlayerStore";
@@ -41,6 +41,13 @@ interface Particle {
   duration: number;
 }
 
+// Tracce gratuite (Pixabay, royalty-free) per la musica di sottofondo del Sanctum
+const TRACKS = [
+  { label: "Lofi Study", url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" },
+  { label: "Workout Ambient", url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-10874.mp3" },
+  { label: "Nessuna Musica", url: "" },
+];
+
 export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby; onLeave: () => void }) {
   const { userId, username } = usePlayerStore();
   const [lobby, setLobby] = useState<FocusLobby>(initialLobby);
@@ -74,6 +81,13 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
     return stored !== null ? Number(stored) : 0.5;
   });
 
+  const handleSkipTrack = useCallback(() => {
+    const playable = TRACKS.filter((t) => t.url);
+    const currentIndex = playable.findIndex((t) => t.url === selectedTrack);
+    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % playable.length;
+    setSelectedTrack(playable[nextIndex].url);
+  }, [selectedTrack]);
+
   // Chime di transizione focus/pausa (generato via Web Audio API, nessun asset esterno)
   const chimeCtxRef = useRef<AudioContext | null>(null);
   const prevStatusRef = useRef(initialLobby.status);
@@ -84,6 +98,9 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
     if (!Ctx) return;
     if (!chimeCtxRef.current) chimeCtxRef.current = new Ctx();
     const ctx = chimeCtxRef.current;
+    // I browser creano l'AudioContext in stato "suspended" finché non viene
+    // risvegliato: senza resume() le note vengono schedulate ma restano mute.
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
     // Note ascendenti per l'inizio del focus, discendenti per l'inizio della pausa
     const notes = kind === "focus" ? [523.25, 783.99] : [659.25, 440.0];
     notes.forEach((freq, i) => {
@@ -205,6 +222,20 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
     return () => {
       chimeCtxRef.current?.close().catch(() => {});
     };
+  }, []);
+
+  // Pre-riscalda l'AudioContext alla prima interazione, così è già "running"
+  // quando arriva la transizione focus/pausa (i browser bloccano l'audio
+  // creato senza un gesto dell'utente).
+  useEffect(() => {
+    const warmUp = () => {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      if (!chimeCtxRef.current) chimeCtxRef.current = new Ctx();
+      if (chimeCtxRef.current.state === "suspended") chimeCtxRef.current.resume().catch(() => {});
+    };
+    window.addEventListener("pointerdown", warmUp, { once: true });
+    return () => window.removeEventListener("pointerdown", warmUp);
   }, []);
 
   // Supabase Channels Setup
@@ -465,42 +496,15 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
           />
         )}
 
-        <div className="w-full flex justify-between absolute top-4 px-6 z-10">
-          <button onClick={claimXPAndLeave} className="text-foreground/50 hover:text-red-400 transition flex items-center gap-2 group text-xs font-semibold cursor-pointer">
+        <div className="w-full flex items-center gap-3 absolute top-4 px-6 z-10">
+          <button onClick={claimXPAndLeave} className="text-foreground/50 hover:text-red-400 transition flex items-center gap-2 group text-xs font-semibold cursor-pointer whitespace-nowrap">
             <X className="w-4 h-4" /> Abbandona {localFocusSecs >= 60 ? "& Incassa" : ""}
           </button>
           {(localFocusSecs >= 60) && (
-            <div className="text-primary font-mono text-xs font-bold px-3 py-1 bg-primary/10 rounded-lg border border-primary/20 animate-pulse">
+            <div className="text-primary font-mono text-xs font-bold px-3 py-1 bg-primary/10 rounded-lg border border-primary/20 animate-pulse whitespace-nowrap">
               XP Attivi: {Math.max(1, Math.floor(localFocusSecs / 60)) * 12}
             </div>
           )}
-          <div className="flex items-center gap-2 text-foreground/60 transition px-3 py-1.5 text-xs rounded-full bg-background/60 backdrop-blur-md border border-surface-border">
-            <Music className="w-3 h-3 text-accent" />
-            <select value={selectedTrack} onChange={(e) => setSelectedTrack(e.target.value)} className="bg-transparent text-[10px] font-bold focus:outline-none appearance-none cursor-pointer pr-1">
-              <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3">Lofi Study</option>
-              <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-10874.mp3">Workout Ambient</option>
-              <option value="">Nessuna Musica</option>
-            </select>
-            <div className="w-px h-3 bg-surface-border" />
-            <button
-              type="button"
-              onClick={() => setVolume((v) => (v > 0 ? 0 : 0.5))}
-              className="text-foreground/60 hover:text-accent transition cursor-pointer"
-              aria-label={volume > 0 ? "Disattiva audio" : "Attiva audio"}
-            >
-              {volume > 0 ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
-            </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
-              className="w-16 h-1 accent-accent cursor-pointer"
-              aria-label="Volume musica"
-            />
-          </div>
         </div>
 
         <div className="relative w-80 h-80 flex items-center justify-center z-10 my-8 shrink-0 select-none">
@@ -605,6 +609,42 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
               </span>
             )}
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-foreground/60 transition px-3 py-1.5 text-xs rounded-full bg-background/60 backdrop-blur-md border border-surface-border z-10 mb-2">
+          <Music className="w-3 h-3 text-accent shrink-0" />
+          <select value={selectedTrack} onChange={(e) => setSelectedTrack(e.target.value)} className="bg-transparent text-[10px] font-bold focus:outline-none appearance-none cursor-pointer pr-1">
+            {TRACKS.map((track) => (
+              <option key={track.url || "none"} value={track.url}>{track.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleSkipTrack}
+            className="text-foreground/60 hover:text-accent transition cursor-pointer shrink-0"
+            aria-label="Salta al brano successivo"
+          >
+            <SkipForward className="w-3 h-3" />
+          </button>
+          <div className="w-px h-3 bg-surface-border" />
+          <button
+            type="button"
+            onClick={() => setVolume((v) => (v > 0 ? 0 : 0.5))}
+            className="text-foreground/60 hover:text-accent transition cursor-pointer shrink-0"
+            aria-label={volume > 0 ? "Disattiva audio" : "Attiva audio"}
+          >
+            {volume > 0 ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+            className="w-16 h-1 accent-accent cursor-pointer"
+            aria-label="Volume musica"
+          />
         </div>
 
         <div className="flex flex-col items-center gap-4 z-10 h-16 shrink-0 justify-center">
