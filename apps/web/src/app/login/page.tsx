@@ -316,7 +316,7 @@ export default function Login() {
                 if (password !== confirmPassword) {
                     throw new Error("Le password non coincidono.");
                 }
-                const { error } = await supabase.auth.signUp({
+                const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
@@ -325,7 +325,17 @@ export default function Login() {
                         },
                     },
                 });
-                if (error) throw error;
+                if (error) {
+                    if (/already registered|already exists/i.test(error.message)) {
+                        throw new Error("Questa email è già registrata. Effettua il login.");
+                    }
+                    throw error;
+                }
+                // Supabase risponde senza errore ma con identities vuote quando l'email
+                // esiste già (per non rivelare quali email sono registrate).
+                if (data.user && data.user.identities?.length === 0) {
+                    throw new Error("Questa email è già registrata. Effettua il login.");
+                }
 
                 setSuccess(true);
                 setTimeout(() => {

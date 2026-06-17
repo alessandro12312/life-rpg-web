@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, X, Music, CheckCircle, Users, Send, Coffee } from "lucide-react";
+import { Play, Pause, X, Music, CheckCircle, Users, Send, Coffee, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { API_URL } from "@/lib/api";
 import { usePlayerStore } from "@/store/usePlayerStore";
@@ -68,6 +68,11 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
   // Audio
   const audioRef = useRef<HTMLAudioElement>(null);
   const [selectedTrack, setSelectedTrack] = useState<string>("https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3");
+  const [volume, setVolume] = useState<number>(() => {
+    if (typeof window === "undefined") return 0.5;
+    const stored = window.localStorage.getItem("sanctum_music_volume");
+    return stored !== null ? Number(stored) : 0.5;
+  });
 
   // Fetch Auth globally for beforeunload
   useEffect(() => {
@@ -153,6 +158,12 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
       audioRef.current.pause();
     }
   }, [lobby.status, selectedTrack]);
+
+  // Apply volume changes to the audio element and persist the preference
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+    window.localStorage.setItem("sanctum_music_volume", String(volume));
+  }, [volume, selectedTrack]);
 
   // Supabase Channels Setup
   useEffect(() => {
@@ -428,6 +439,25 @@ export function FocusRoom({ initialLobby, onLeave }: { initialLobby: FocusLobby;
               <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-10874.mp3">Workout Ambient</option>
               <option value="">Nessuna Musica</option>
             </select>
+            <div className="w-px h-3 bg-surface-border" />
+            <button
+              type="button"
+              onClick={() => setVolume((v) => (v > 0 ? 0 : 0.5))}
+              className="text-foreground/60 hover:text-accent transition cursor-pointer"
+              aria-label={volume > 0 ? "Disattiva audio" : "Attiva audio"}
+            >
+              {volume > 0 ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              className="w-16 h-1 accent-accent cursor-pointer"
+              aria-label="Volume musica"
+            />
           </div>
         </div>
 
